@@ -446,6 +446,8 @@ export default function App() {
           cumulativeSalaryEarned={saveData.cumulativeSalaryEarned !== undefined ? saveData.cumulativeSalaryEarned : 15000000}
           totalCaughtTimes={saveData.totalCaughtTimes !== undefined ? saveData.totalCaughtTimes : 0}
           totalEscapes={saveData.totalEscapes !== undefined ? saveData.totalEscapes : 0}
+          saveData={saveData}
+          updateSaveData={updateSaveData}
         />
       )}
 
@@ -491,6 +493,7 @@ export default function App() {
               throwSignal={throwSignal}
               hideSignal={hideSignal}
               onNearHidingSpotChange={setIsNearHidingSpot}
+              activeCat={saveData.activeCat}
             />
 
             {/* HUD Overlay */}

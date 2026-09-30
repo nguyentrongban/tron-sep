@@ -18,6 +18,8 @@ export interface GameSaveData {
   totalCaughtTimes?: number;     // Number of times caught
   monthlySalaryVND?: number;      // Current salary this month (starts at 15,000,000 VND)
   cumulativeSalaryEarned?: number; // Total cumulative career earnings in VND
+  activeCat?: string;             // Active adopted companion cat ('none' | 'boba' | 'emperor' | 'tuxedo')
+  adoptedCats?: string[];         // List of adopted companion cat IDs (e.g., ['boba', 'emperor'])
 }
 
 export const INITIAL_UPGRADES: PlayerUpgrades = {
@@ -185,6 +187,8 @@ export function loadGameSaveData(): GameSaveData {
       if (data.totalCaughtTimes === undefined) data.totalCaughtTimes = 0;
       if (data.monthlySalaryVND === undefined) data.monthlySalaryVND = 15000000;
       if (data.cumulativeSalaryEarned === undefined) data.cumulativeSalaryEarned = 15000000;
+      if (data.activeCat === undefined) data.activeCat = 'none';
+      if (data.adoptedCats === undefined) data.adoptedCats = [];
       return data;
     }
   } catch (e) {
@@ -206,7 +210,9 @@ export function loadGameSaveData(): GameSaveData {
     totalEscapes: 0,
     totalCaughtTimes: 0,
     monthlySalaryVND: 15000000,
-    cumulativeSalaryEarned: 15000000
+    cumulativeSalaryEarned: 15000000,
+    activeCat: 'none',
+    adoptedCats: []
   };
 }
 

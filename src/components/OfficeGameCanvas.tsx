@@ -50,6 +50,7 @@ interface OfficeGameCanvasProps {
   throwSignal: number;
   hideSignal: number;
   onNearHidingSpotChange: (isNear: boolean) => void;
+  activeCat?: string;
 }
 
 export const OfficeGameCanvas: React.FC<OfficeGameCanvasProps> = ({
@@ -72,7 +73,8 @@ export const OfficeGameCanvas: React.FC<OfficeGameCanvasProps> = ({
   mobileSprintSignal,
   throwSignal,
   hideSignal,
-  onNearHidingSpotChange
+  onNearHidingSpotChange,
+  activeCat = 'none'
 }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
@@ -509,6 +511,7 @@ export const OfficeGameCanvas: React.FC<OfficeGameCanvasProps> = ({
           if (s.player.isSneaking) currentSpeed *= (0.55 + sneakBonus);
           if (s.player.isSprinting) currentSpeed *= 1.85; // Massive sprint burst!
           if (s.player.inventory.coffeeBoostTime > 0) currentSpeed *= 1.35;
+          if (activeCat === 'boba') currentSpeed *= 1.15; // Boba Cat speed buff!
 
           s.player.vx = normX * currentSpeed;
           s.player.vy = normY * currentSpeed;
@@ -522,7 +525,8 @@ export const OfficeGameCanvas: React.FC<OfficeGameCanvasProps> = ({
 
             // Sprinting makes loud footstep sound that bosses can hear!
             if (s.player.isSprinting) {
-              const noiseRadius = 140 * Math.max(0.4, 1 - (upgrades.sneakersLevel || 0) * 0.2);
+              const catNoiseMult = activeCat === 'emperor' ? 0.5 : 1.0;
+              const noiseRadius = 140 * Math.max(0.4, 1 - (upgrades.sneakersLevel || 0) * 0.2) * catNoiseMult;
               s.distractions.push({
                 x: pCenter.x,
                 y: pCenter.y,
@@ -644,13 +648,15 @@ export const OfficeGameCanvas: React.FC<OfficeGameCanvasProps> = ({
               s.player.inventory.distractionsCount++;
               soundManager.playPickup();
             } else if (item.type === 'bonus_cash') {
-              const val = item.value || 50;
+              const catMult = activeCat === 'tuxedo' ? 2 : 1;
+              const val = (item.value || 50) * catMult;
               s.player.inventory.collectedCoins += val;
               if (onCollectCoin) onCollectCoin(val);
               if (onMissionProgress) onMissionProgress('daily_collect_cash', 1);
               soundManager.playPickup();
             } else if (item.type === 'boba') {
-              const val = item.value || 40;
+              const catMult = activeCat === 'tuxedo' ? 2 : 1;
+              const val = (item.value || 40) * catMult;
               s.player.inventory.collectedCoins += val;
               s.player.stamina = s.player.maxStamina; // instantly refresh stamina!
               if (onCollectCoin) onCollectCoin(val);
@@ -1214,6 +1220,30 @@ export const OfficeGameCanvas: React.FC<OfficeGameCanvasProps> = ({
 
       // 9. Player Chibi
       drawPlayerChibi(ctx, s.player, s.frame);
+
+      // 9.5. Player Companion Pet (Cat)
+      if (activeCat && activeCat !== 'none' && !s.player.isHiding) {
+        const petEmoji = activeCat === 'boba' ? '🐱🧋' : activeCat === 'emperor' ? '🐱👑' : '🐱🤵';
+        const petX = pCenter.x - Math.cos(s.player.facingAngle) * 24;
+        const petY = pCenter.y - Math.sin(s.player.facingAngle) * 24;
+        
+        ctx.save();
+        ctx.font = '14px Arial';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        
+        // Bobbing up and down nicely to simulate a walking cat!
+        const bob = Math.sin(s.frame * 0.25) * 2;
+        
+        // Draw cute little shadow
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.25)';
+        ctx.beginPath();
+        ctx.ellipse(petX, petY + 7, 7, 2.5, 0, 0, Math.PI * 2);
+        ctx.fill();
+        
+        ctx.fillText(petEmoji, petX, petY + bob);
+        ctx.restore();
+      }
 
       // 10. Boss Chibi Characters
       for (const boss of s.bosses) {
