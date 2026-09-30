@@ -1,6 +1,6 @@
 import React from 'react';
 import confetti from 'canvas-confetti';
-import { Play, RotateCcw, Award, CheckCircle2, XCircle, ArrowRight, Sparkles, User, HelpCircle } from 'lucide-react';
+import { Play, RotateCcw, Award, CheckCircle2, XCircle, ArrowRight, Sparkles, User, HelpCircle, Home, Volume2, VolumeX } from 'lucide-react';
 import { CharacterSkin, Accessory, FloorLevel } from '../types/game';
 
 interface IntroModalProps {
@@ -492,6 +492,90 @@ export const HelpModal: React.FC<HelpModalProps> = ({ onClose }) => {
         >
           ĐÃ HIỂU, CHO TÔI VỀ!
         </button>
+      </div>
+    </div>
+  );
+};
+
+interface PauseModalProps {
+  levelTitle: string;
+  deptName: string;
+  onResume: () => void;
+  onRestart: () => void;
+  onGoToMenu: () => void;
+  onOpenHelp: () => void;
+  isMuted: boolean;
+  onToggleMute: () => void;
+}
+
+export const PauseModal: React.FC<PauseModalProps> = ({
+  levelTitle,
+  deptName,
+  onResume,
+  onRestart,
+  onGoToMenu,
+  onOpenHelp,
+  isMuted,
+  onToggleMute
+}) => {
+  return (
+    <div className="fixed inset-0 z-50 bg-slate-950/85 backdrop-blur-md flex items-center justify-center p-4">
+      <div className="pixel-box bg-slate-900 border-2 border-amber-500 max-w-sm w-full p-5 rounded-2xl shadow-2xl animate-in zoom-in-95 duration-150 text-center">
+        {/* Header */}
+        <div className="pb-3 border-b border-slate-800 flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <span className="text-xl">⏸️</span>
+            <span className="font-pixel text-xs text-amber-400">TẠM DỪNG TRÒ CHƠI</span>
+          </div>
+          <button
+            onClick={onToggleMute}
+            className="p-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 transition-all cursor-pointer"
+            title={isMuted ? 'Bật âm thanh' : 'Tắt âm thanh'}
+          >
+            {isMuted ? <VolumeX className="w-4 h-4 text-red-400" /> : <Volume2 className="w-4 h-4 text-emerald-400" />}
+          </button>
+        </div>
+
+        <div className="my-3 py-2.5 px-3 bg-slate-950/80 rounded-xl border border-slate-800">
+          <div className="text-[10px] text-slate-400 font-pixel">ĐANG TRỐN TẠI:</div>
+          <div className="text-xs font-bold text-slate-200 font-chibi truncate mt-0.5">{levelTitle}</div>
+          <div className="text-[11px] text-amber-300 font-medium truncate">{deptName}</div>
+        </div>
+
+        {/* Buttons */}
+        <div className="space-y-2.5 my-4">
+          <button
+            onClick={onResume}
+            className="w-full py-3 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-slate-950 font-pixel text-xs rounded-xl font-bold shadow-lg shadow-emerald-500/20 active:scale-98 transition-all flex items-center justify-center gap-2 cursor-pointer"
+          >
+            <Play className="w-4 h-4 fill-slate-950" />
+            <span>TIẾP TỤC TRỐN</span>
+          </button>
+
+          <button
+            onClick={onRestart}
+            className="w-full py-2.5 bg-slate-800 hover:bg-slate-700 text-amber-300 border border-amber-500/40 font-pixel text-xs rounded-xl font-bold active:scale-98 transition-all flex items-center justify-center gap-2 cursor-pointer"
+          >
+            <RotateCcw className="w-4 h-4" />
+            <span>CHƠI LẠI ẢI NÀY</span>
+          </button>
+
+          <button
+            onClick={onOpenHelp}
+            className="w-full py-2.5 bg-slate-800 hover:bg-slate-700 text-sky-300 border border-sky-500/40 font-pixel text-xs rounded-xl font-bold active:scale-98 transition-all flex items-center justify-center gap-2 cursor-pointer"
+          >
+            <HelpCircle className="w-4 h-4" />
+            <span>HƯỚNG DẪN CHƠI</span>
+          </button>
+
+          <button
+            onClick={onGoToMenu}
+            className="w-full py-2.5 bg-red-950/60 hover:bg-red-900/80 text-red-300 border border-red-500/50 font-pixel text-xs rounded-xl font-bold active:scale-98 transition-all flex items-center justify-center gap-2 cursor-pointer"
+          >
+            <Home className="w-4 h-4" />
+            <span>VỀ MÀN HÌNH CHÍNH (MHC)</span>
+          </button>
+        </div>
       </div>
     </div>
   );

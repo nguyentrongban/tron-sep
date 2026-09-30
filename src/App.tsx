@@ -12,7 +12,7 @@ import { MainMenu } from './components/MainMenu';
 import { OfficeGameCanvas } from './components/OfficeGameCanvas';
 import { GameHUD } from './components/GameHUD';
 import { MobileControls } from './components/MobileControls';
-import { IntroModal, CaughtModal, VictoryModal, WardrobeModal, HelpModal } from './components/Modals';
+import { IntroModal, CaughtModal, VictoryModal, WardrobeModal, HelpModal, PauseModal } from './components/Modals';
 import { ShopModal, MissionsModal } from './components/ShopAndMissionsModal';
 import { LuckyWheelModal } from './components/LuckyWheelModal';
 import { HallOfFameModal } from './components/HallOfFameModal';
@@ -292,10 +292,15 @@ export default function App() {
         return ach;
       });
 
+      // Unlock next level in campaign!
+      const clearedFloorNum = currentFloorIndex + 1;
+      const nextMaxUnlocked = Math.max(prev.maxLevelUnlocked || 1, Math.min(8, clearedFloorNum + 1));
+
       return {
         ...prev,
         coins: nextCoins,
         totalEscapes: nextEscapes,
+        maxLevelUnlocked: nextMaxUnlocked,
         hasCompletedTutorial: gameMode === 'tutorial' ? true : prev.hasCompletedTutorial,
         hasBeatenGame: hasWonCampaign,
         unlockedSkins: newSkins,
@@ -352,6 +357,7 @@ export default function App() {
 
   // Replay current floor
   const handleReplayFloor = () => {
+    setIsPaused(false);
     setFloorLootCoins(0);
     if (gameMode === 'story' || gameMode === 'nightmare') {
       setCurrentLevel(JSON.parse(JSON.stringify(STORY_LEVELS[currentFloorIndex])));
@@ -367,6 +373,7 @@ export default function App() {
 
   // Return to main menu
   const handleGoToMenu = () => {
+    setIsPaused(false);
     setStatus('menu');
     soundManager.stopBGM();
   };
@@ -382,7 +389,7 @@ export default function App() {
           onStartStory={handleStartStory}
           onStartEndless={handleStartEndless}
           onStartTutorial={handleStartTutorial}
-          onStartNightmare={(flId) => handleStartStory(flId)}
+          onStartNightmare={handleStartNightmare}
           onStartBossHunt={handleStartBossHunt}
           onOpenShop={() => setShowShop(true)}
           onOpenMissions={() => setShowMissions(true)}
@@ -398,6 +405,7 @@ export default function App() {
           coins={saveData.coins}
           hasBeatenGame={saveData.unlockedSkins.includes('ceo_gold') || saveData.totalEscapes >= 8}
           unclaimedMissionsCount={unclaimedCount}
+          maxLevelUnlocked={saveData.maxLevelUnlocked || 1}
         />
       )}
 
@@ -577,6 +585,20 @@ export default function App() {
 
       {/* 12. How-To-Play Guide Modal */}
       {showHelp && <HelpModal onClose={() => setShowHelp(false)} />}
+
+      {/* 13. Pause Menu Overlay */}
+      {status === 'playing' && isPaused && (
+        <PauseModal
+          levelTitle={currentLevel.title}
+          deptName={currentLevel.deptName}
+          onResume={() => setIsPaused(false)}
+          onRestart={handleReplayFloor}
+          onGoToMenu={handleGoToMenu}
+          onOpenHelp={() => setShowHelp(true)}
+          isMuted={isMuted}
+          onToggleMute={handleToggleMute}
+        />
+      )}
     </div>
   );
 }

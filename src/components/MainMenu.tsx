@@ -36,6 +36,7 @@ interface MainMenuProps {
   coins: number;
   hasBeatenGame?: boolean;
   unclaimedMissionsCount?: number;
+  maxLevelUnlocked?: number;
 }
 
 export const MainMenu: React.FC<MainMenuProps> = ({
@@ -57,9 +58,10 @@ export const MainMenu: React.FC<MainMenuProps> = ({
   highScoreEndless,
   coins,
   hasBeatenGame = false,
-  unclaimedMissionsCount = 0
+  unclaimedMissionsCount = 0,
+  maxLevelUnlocked = 1
 }) => {
-  const [selectedFloor, setSelectedFloor] = React.useState<number>(1);
+  const [selectedFloor, setSelectedFloor] = React.useState<number>(Math.min(maxLevelUnlocked, 8));
   const [isNightmareTab, setIsNightmareTab] = React.useState<boolean>(false);
 
   const floorList = [
@@ -278,23 +280,33 @@ export const MainMenu: React.FC<MainMenuProps> = ({
 
             {/* Floor selector tabs */}
             <div className="grid grid-cols-4 sm:grid-cols-8 gap-1.5 mb-2.5">
-              {floorList.map((fl) => (
-                <button
-                  key={fl.id}
-                  onClick={() => setSelectedFloor(fl.id)}
-                  className={`p-1.5 rounded-xl border text-center transition-all cursor-pointer active:scale-95 ${
-                    selectedFloor === fl.id
-                      ? isNightmareTab
-                        ? 'bg-red-600/30 border-red-400 text-red-200 shadow-md shadow-red-600/30 ring-1 ring-red-400'
-                        : 'bg-amber-500/25 border-amber-400 text-amber-300 shadow-md shadow-amber-500/20 ring-1 ring-amber-400'
-                      : 'bg-slate-950 border-slate-800 text-slate-400 hover:border-slate-700'
-                  }`}
-                  title={`${fl.name}: ${fl.desc}`}
-                >
-                  <div className="text-base mb-0.5">{isNightmareTab ? '💀' : fl.icon}</div>
-                  <div className="font-pixel text-[9px] truncate">ẢI {fl.id}</div>
-                </button>
-              ))}
+              {floorList.map((fl) => {
+                const isUnlocked = fl.id <= maxLevelUnlocked;
+                const isSelected = selectedFloor === fl.id;
+                return (
+                  <button
+                    key={fl.id}
+                    onClick={() => setSelectedFloor(fl.id)}
+                    className={`p-1.5 rounded-xl border text-center transition-all cursor-pointer active:scale-95 relative ${
+                      isSelected
+                        ? isNightmareTab
+                          ? 'bg-red-600/30 border-red-400 text-red-200 shadow-md shadow-red-600/30 ring-1 ring-red-400'
+                          : 'bg-amber-500/25 border-amber-400 text-amber-300 shadow-md shadow-amber-500/20 ring-1 ring-amber-400'
+                        : isUnlocked
+                        ? 'bg-slate-950 border-slate-800 text-slate-300 hover:border-slate-700'
+                        : 'bg-slate-950/60 border-slate-900 text-slate-600 opacity-60'
+                    }`}
+                    title={isUnlocked ? `${fl.name}: ${fl.desc}` : `Ải ${fl.id} chưa mở khóa!`}
+                  >
+                    <div className="text-base mb-0.5">
+                      {!isUnlocked ? '🔒' : isNightmareTab ? '💀' : fl.icon}
+                    </div>
+                    <div className="font-pixel text-[9px] truncate">
+                      {isUnlocked ? `ẢI ${fl.id}` : `KHÓA`}
+                    </div>
+                  </button>
+                );
+              })}
             </div>
 
             <div className={`border rounded-xl px-2.5 py-2 mb-2.5 text-left transition-all ${
@@ -303,34 +315,60 @@ export const MainMenu: React.FC<MainMenuProps> = ({
                 : 'bg-slate-950/80 border-slate-800/80'
             }`}>
               <div className={`font-pixel text-[10px] font-bold mb-0.5 flex items-center justify-between ${
-                isNightmareTab ? 'text-red-300' : 'text-amber-300'
+                selectedFloor > maxLevelUnlocked
+                  ? 'text-slate-500'
+                  : isNightmareTab
+                  ? 'text-red-300'
+                  : 'text-amber-300'
               }`}>
-                <span>{floorList[selectedFloor - 1]?.name}</span>
-                {isNightmareTab && (
+                <span>
+                  {floorList[selectedFloor - 1]?.name}
+                  {selectedFloor > maxLevelUnlocked && ' (CHƯA MỞ KHÓA 🔒)'}
+                </span>
+                {isNightmareTab && selectedFloor <= maxLevelUnlocked && (
                   <span className="text-[9px] px-1.5 py-0.5 rounded bg-red-600/40 border border-red-500 text-red-300 font-pixel">
                     3X TIỀN LƯƠNG
                   </span>
                 )}
               </div>
               <div className="font-chibi text-[11px] text-slate-300">
-                {isNightmareTab
-                  ? '🌙 Văn phòng tắt đèn tối đen! Bạn chỉ có đèn pin, Sếp chạy nhanh 1.3x và kỹ năng Quét Radar kích hoạt liên tục mỗi 25 giây!'
-                  : floorList[selectedFloor - 1]?.desc}
+                {selectedFloor > maxLevelUnlocked ? (
+                  <span className="text-red-400 font-medium">
+                    🔒 Ải này chưa mở khóa! Hãy vượt qua thành công Ải {selectedFloor - 1} để mở khóa Ải tiếp theo!
+                  </span>
+                ) : isNightmareTab ? (
+                  '🌙 Văn phòng tắt đèn tối đen! Bạn chỉ có đèn pin, Sếp chạy nhanh 1.3x và kỹ năng Quét Radar kích hoạt liên tục mỗi 25 giây!'
+                ) : (
+                  floorList[selectedFloor - 1]?.desc
+                )}
               </div>
             </div>
 
             <button
-              onClick={() => (isNightmareTab ? onStartNightmare(selectedFloor) : onStartStory(selectedFloor))}
-              className={`w-full py-3 font-pixel text-xs rounded-xl font-bold shadow-lg active:scale-98 transition-all flex items-center justify-center gap-2 cursor-pointer ${
-                isNightmareTab
-                  ? 'bg-gradient-to-r from-red-600 via-rose-600 to-purple-600 hover:from-red-500 hover:to-purple-500 text-white shadow-red-600/30'
-                  : 'bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 shadow-amber-500/25'
+              onClick={() => {
+                if (selectedFloor <= maxLevelUnlocked) {
+                  isNightmareTab ? onStartNightmare(selectedFloor) : onStartStory(selectedFloor);
+                }
+              }}
+              disabled={selectedFloor > maxLevelUnlocked}
+              className={`w-full py-3 font-pixel text-xs rounded-xl font-bold shadow-lg transition-all flex items-center justify-center gap-2 ${
+                selectedFloor > maxLevelUnlocked
+                  ? 'bg-slate-800 text-slate-500 border border-slate-700 cursor-not-allowed'
+                  : isNightmareTab
+                  ? 'bg-gradient-to-r from-red-600 via-rose-600 to-purple-600 hover:from-red-500 hover:to-purple-500 text-white shadow-red-600/30 active:scale-98 cursor-pointer'
+                  : 'bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 shadow-amber-500/25 active:scale-98 cursor-pointer'
               }`}
             >
-              <Play className="w-4 h-4 fill-current" />
-              <span>
-                {isNightmareTab ? `BẮT ĐẦU ÁC MỘNG ẢI ${selectedFloor}` : `BẮT ĐẦU VƯỢT ẢI ${selectedFloor}`}
-              </span>
+              {selectedFloor > maxLevelUnlocked ? (
+                <span>🔒 CẦN THẮNG ẢI {selectedFloor - 1} ĐỂ MỞ KHÓA</span>
+              ) : (
+                <>
+                  <Play className="w-4 h-4 fill-current" />
+                  <span>
+                    {isNightmareTab ? `BẮT ĐẦU ÁC MỘNG ẢI ${selectedFloor}` : `BẮT ĐẦU VƯỢT ẢI ${selectedFloor}`}
+                  </span>
+                </>
+              )}
             </button>
           </div>
 

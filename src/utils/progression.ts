@@ -6,6 +6,7 @@ export interface GameSaveData {
   coins: number;
   hasCompletedTutorial: boolean;
   hasBeatenGame?: boolean;
+  maxLevelUnlocked?: number;
   upgrades: PlayerUpgrades;
   unlockedSkins: CharacterSkin[];
   unlockedAccessories: Accessory[];
@@ -175,6 +176,9 @@ export function loadGameSaveData(): GameSaveData {
         data.dailyMissionsDate = today;
         data.dailyMissions = generateDailyMissions();
       }
+      if (!data.maxLevelUnlocked) {
+        data.maxLevelUnlocked = 1;
+      }
       return data;
     }
   } catch (e) {
@@ -185,6 +189,7 @@ export function loadGameSaveData(): GameSaveData {
   return {
     coins: 200, // Starter bonus for fun
     hasCompletedTutorial: false,
+    maxLevelUnlocked: 1,
     upgrades: { ...INITIAL_UPGRADES },
     unlockedSkins: ['coder', 'designer'],
     unlockedAccessories: ['none', 'sunglasses'],
