@@ -16,6 +16,7 @@ import { IntroModal, CaughtModal, VictoryModal, WardrobeModal, HelpModal, PauseM
 import { ShopModal, MissionsModal } from './components/ShopAndMissionsModal';
 import { LuckyWheelModal } from './components/LuckyWheelModal';
 import { HallOfFameModal } from './components/HallOfFameModal';
+import { toggleFullscreen } from './utils/fullscreen';
 import { BossHuntCanvas } from './components/BossHuntCanvas';
 
 export default function App() {
@@ -387,9 +388,15 @@ export default function App() {
       <div className="md:hidden portrait:flex hidden fixed inset-0 z-[100] bg-slate-950/95 backdrop-blur-md flex-col items-center justify-center p-6 text-center">
         <div className="animate-bounce mb-4 text-4xl">📱 🔄</div>
         <h3 className="font-pixel text-amber-300 text-base mb-2">VUI LÒNG XOAY NGANG MÀN HÌNH</h3>
-        <p className="text-slate-300 font-pixel text-xs max-w-xs leading-relaxed">
-          Game "Trốn Sếp Tan Ca" chuẩn Fullscreen Landscape. Hãy xoay ngang thiết bị để trải nghiệm tối đa góc nhìn!
+        <p className="text-slate-300 font-pixel text-xs max-w-xs leading-relaxed mb-4">
+          Game "Trốn Sếp Tan Ca" chuẩn Fullscreen Landscape. Hãy xoay ngang thiết bị để trải nghiệm toàn màn hình lấp đầy 100%!
         </p>
+        <button
+          onClick={toggleFullscreen}
+          className="px-4 py-2 bg-gradient-to-r from-amber-500 to-amber-600 text-slate-950 font-pixel text-xs rounded-xl font-bold active:scale-95 shadow-lg cursor-pointer"
+        >
+          📱 MỞ TOÀN MÀN HÌNH
+        </button>
       </div>
       {/* 1. Main Menu Screen */}
       {status === 'menu' && (

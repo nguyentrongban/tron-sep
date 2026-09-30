@@ -4,10 +4,12 @@ import {
   Flame,
   Volume2,
   VolumeX,
-  HelpCircle
+  HelpCircle,
+  Maximize2
 } from 'lucide-react';
 import { CharacterSkin, Accessory } from '../types/game';
 import { LottieStickerIcon } from './LottieStickerIcon';
+import { toggleFullscreen } from '../utils/fullscreen';
 
 interface MainMenuProps {
   onStartStory: (floorId: number) => void;
@@ -117,6 +119,15 @@ export const MainMenu: React.FC<MainMenuProps> = ({
 
         {/* Right Utilities */}
         <div className="flex items-center gap-1 sm:gap-1.5">
+          <button
+            onClick={toggleFullscreen}
+            className="px-1.5 sm:px-2 py-0.5 rounded-full bg-emerald-950/90 border border-emerald-400/60 text-emerald-300 font-pixel text-[9px] sm:text-xs flex items-center gap-1 active:scale-95 transition-all cursor-pointer shadow-md"
+            title="Bật/Tắt Toàn Màn Hình"
+          >
+            <Maximize2 className="w-3 h-3 text-emerald-400" />
+            <span className="hidden xs:inline">FULL MÀN HÌNH</span>
+          </button>
+
           <button
             onClick={onOpenHallOfFame}
             className="px-1.5 sm:px-2 py-0.5 rounded-full bg-slate-900/90 border border-amber-500/60 text-amber-300 font-pixel text-[9px] sm:text-xs flex items-center gap-1 active:scale-95 transition-all cursor-pointer"

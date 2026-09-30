@@ -16,9 +16,11 @@ import {
   Zap,
   Footprints,
   Clock,
-  Sparkles
+  Sparkles,
+  Maximize2
 } from 'lucide-react';
 import { Player, FloorLevel } from '../types/game';
+import { toggleFullscreen } from '../utils/fullscreen';
 
 interface GameHUDProps {
   player: Player;
@@ -194,6 +196,15 @@ export const GameHUD: React.FC<GameHUDProps> = ({
                 BỎ QUA ➔
               </button>
             )}
+
+            {/* Fullscreen Toggle */}
+            <button
+              onClick={toggleFullscreen}
+              className="pointer-events-auto p-1.5 bg-slate-900/90 hover:bg-slate-800 text-emerald-400 border border-slate-700 rounded-lg active:scale-95 cursor-pointer"
+              title="Bật/Tắt Toàn Màn Hình"
+            >
+              <Maximize2 className="w-3.5 h-3.5" />
+            </button>
 
             {/* Audio Toggle */}
             <button

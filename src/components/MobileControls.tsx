@@ -180,9 +180,9 @@ export const MobileControls: React.FC<MobileControlsProps> = ({
 
       {/* 2. Right Side: Large Ergonomic Action Buttons */}
       <div
-        className="pointer-events-none absolute right-3 flex flex-col gap-2.5 items-end"
+        className="pointer-events-none absolute right-3.5 flex flex-col gap-2.5 items-end z-40"
         style={{
-          bottom: 'calc(16px + env(safe-area-inset-bottom, 0px))'
+          bottom: 'calc(28px + env(safe-area-inset-bottom, 0px))'
         }}
       >
         {/* Top Action Row: Throw Distraction & Contextual Hide */}

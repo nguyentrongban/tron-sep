@@ -89,6 +89,20 @@ export function drawOfficeFloor(
 ) {
   ctx.save();
 
+  // 1. Fill extended outer carpet background to eliminate black empty voids when camera pans
+  ctx.fillStyle = '#0B091A';
+  ctx.fillRect(-2000, -2000, width + 4000, height + 4000);
+
+  // Subtle outer floor tile pattern
+  ctx.fillStyle = '#080614';
+  for (let oy = -2000; oy < height + 2000; oy += 64) {
+    for (let ox = -2000; ox < width + 2000; ox += 64) {
+      if ((Math.floor(ox / 64) + Math.floor(oy / 64)) % 2 === 0) {
+        ctx.fillRect(ox, oy, 64, 64);
+      }
+    }
+  }
+
   // If the 1600x896 map image is loaded, render it directly as the background map
   if (width === 1600 && height === 896 && isOfficeMapImgLoaded) {
     ctx.drawImage(cachedOfficeMapImg, 0, 0, width, height);
@@ -96,6 +110,12 @@ export function drawOfficeFloor(
     // Subtle ambient lighting overlay
     ctx.fillStyle = 'rgba(11, 9, 26, 0.15)';
     ctx.fillRect(0, 0, width, height);
+
+    // Outer wall border shadow
+    ctx.strokeStyle = '#05040F';
+    ctx.lineWidth = 6;
+    ctx.strokeRect(0, 0, width, height);
+
     ctx.restore();
     return;
   }

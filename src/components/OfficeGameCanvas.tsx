@@ -964,13 +964,23 @@ export const OfficeGameCanvas: React.FC<OfficeGameCanvasProps> = ({
         s.screenShake = Math.max(0, s.screenShake - 0.5);
       }
 
-      // Responsive Camera Scale: 1.15x - 1.25x on mobile screens
-      const isMobile = displayW < 768;
-      const zoom = isMobile ? 1.2 : 1.0;
+      // Adaptive Camera Zoom & Smooth Viewport Centering
+      const isLandscapeMobile = displayH < 520 || (displayW < 1024 && displayW > displayH);
+      const zoom = isLandscapeMobile
+        ? Math.max(1.1, Math.min(1.35, displayH > 0 ? 460 / displayH : 1.2))
+        : (displayW < 768 ? 1.2 : 1.0);
+
       const viewW = displayW / zoom;
       const viewH = displayH / zoom;
-      const cameraX = Math.max(0, Math.min(s.level.mapWidth - viewW, pCenter.x - viewW / 2));
-      const cameraY = Math.max(0, Math.min(s.level.mapHeight - viewH, pCenter.y - viewH / 2));
+
+      const maxCamX = s.level.mapWidth - viewW;
+      const maxCamY = s.level.mapHeight - viewH;
+
+      const targetCamX = pCenter.x - viewW / 2;
+      const targetCamY = pCenter.y - viewH / 2;
+
+      const cameraX = maxCamX < 0 ? maxCamX / 2 : Math.max(0, Math.min(maxCamX, targetCamX));
+      const cameraY = maxCamY < 0 ? maxCamY / 2 : Math.max(0, Math.min(maxCamY, targetCamY));
 
       ctx.save();
       ctx.scale(zoom, zoom);
