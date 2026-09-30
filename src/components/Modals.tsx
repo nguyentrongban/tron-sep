@@ -134,6 +134,8 @@ interface VictoryModalProps {
   onNextFloor: () => void;
   onReplay: () => void;
   onGoToMenu: () => void;
+  onStartBossHunt?: () => void;
+  onStartNightmare?: () => void;
 }
 
 export const VictoryModal: React.FC<VictoryModalProps> = ({
@@ -144,7 +146,9 @@ export const VictoryModal: React.FC<VictoryModalProps> = ({
   lootCoins = 0,
   onNextFloor,
   onReplay,
-  onGoToMenu
+  onGoToMenu,
+  onStartBossHunt,
+  onStartNightmare
 }) => {
   React.useEffect(() => {
     confetti({
@@ -208,11 +212,77 @@ export const VictoryModal: React.FC<VictoryModalProps> = ({
               '⚡ Sếp vừa ngẩng mặt lên hỏi "Ủa đâu rồi?" thì bạn đã bấm thang máy chuồn êm đẹp!'
             )}
           </div>
+
+          {/* Grand Champion Unlocks Box if game complete */}
+          {isAllCompleted && (
+            <div className="p-3 bg-gradient-to-r from-amber-500/20 via-purple-500/20 to-indigo-500/20 rounded-xl border-2 border-amber-400 text-left animate-pulse">
+              <div className="font-pixel text-[11px] text-amber-300 font-bold mb-1 flex items-center gap-1.5">
+                <span>👑</span>
+                <span>PHẦN THƯỞNG PHÁ ĐẢO HUYỀN THOẠI:</span>
+              </div>
+              <div className="space-y-1 text-[11px] font-chibi text-slate-200">
+                <div className="flex items-center gap-1.5">
+                  <span className="text-amber-400">★</span>
+                  <span>Đã mở khóa <b>Skin Chủ Tịch Giả Nghèo</b> (Suit hoàng kim dát vàng)</span>
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <span className="text-amber-400">★</span>
+                  <span>Đã mở khóa <b>Vương Miện Trốn OT Mạ Vàng</b> trong Tủ Đồ</span>
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <span className="text-amber-400">★</span>
+                  <span>Đã mở khóa <b>Chế độ Làm Sếp Săn Nhân Viên</b> (Đảo ngược vai trò!)</span>
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <span className="text-amber-400">★</span>
+                  <span>Tặng thưởng <b>+500 Xu Vàng</b> vào ví lương</span>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Buttons */}
-        <div className="flex flex-col sm:flex-row gap-3">
-          {!isAllCompleted ? (
+        {isAllCompleted ? (
+          <div className="space-y-2">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+              {onStartBossHunt && (
+                <button
+                  onClick={onStartBossHunt}
+                  className="py-3 px-3 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-slate-950 font-pixel text-xs rounded-xl font-bold shadow-lg shadow-amber-500/25 active:scale-98 transition-all flex items-center justify-center gap-1.5 cursor-pointer"
+                >
+                  <Award className="w-4 h-4" />
+                  <span>👑 CHƠI LÀM SẾP SĂN NV</span>
+                </button>
+              )}
+              {onStartNightmare && (
+                <button
+                  onClick={onStartNightmare}
+                  className="py-3 px-3 bg-gradient-to-r from-red-600 to-purple-600 hover:from-red-500 hover:to-purple-500 text-white font-pixel text-xs rounded-xl font-bold shadow-lg shadow-red-600/30 active:scale-98 transition-all flex items-center justify-center gap-1.5 cursor-pointer"
+                >
+                  <span>🔥 THỬ ÁC MỘNG TẦNG 1</span>
+                </button>
+              )}
+            </div>
+
+            <div className="flex gap-2">
+              <button
+                onClick={onGoToMenu}
+                className="flex-1 py-3 bg-slate-800 hover:bg-slate-700 text-amber-300 font-pixel text-xs rounded-xl border border-amber-500/40 active:scale-98 transition-all flex items-center justify-center gap-1.5 cursor-pointer"
+              >
+                <span>VỀ MENU CHÍNH</span>
+              </button>
+              <button
+                onClick={onReplay}
+                className="py-3 px-4 bg-slate-900 hover:bg-slate-800 text-slate-400 font-pixel text-xs rounded-xl border border-slate-800 active:scale-98 transition-all cursor-pointer flex items-center justify-center gap-1.5"
+              >
+                <RotateCcw className="w-3.5 h-3.5" />
+                <span>Chơi lại</span>
+              </button>
+            </div>
+          </div>
+        ) : (
+          <div className="flex flex-col sm:flex-row gap-3">
             <button
               onClick={onNextFloor}
               className="flex-1 py-3.5 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-slate-950 font-pixel text-xs rounded-xl font-bold shadow-lg shadow-emerald-500/25 active:scale-98 transition-all flex items-center justify-center gap-2 cursor-pointer"
@@ -220,24 +290,15 @@ export const VictoryModal: React.FC<VictoryModalProps> = ({
               <span>XUỐNG TẦNG TIẾP THEO</span>
               <ArrowRight className="w-4 h-4" />
             </button>
-          ) : (
             <button
-              onClick={onGoToMenu}
-              className="flex-1 py-3.5 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 font-pixel text-xs rounded-xl font-bold shadow-lg shadow-amber-500/25 active:scale-98 transition-all flex items-center justify-center gap-2 cursor-pointer"
+              onClick={onReplay}
+              className="py-3 px-4 bg-slate-800 hover:bg-slate-700 text-slate-300 font-pixel text-xs rounded-xl border border-slate-700 active:scale-98 transition-all cursor-pointer flex items-center justify-center gap-1.5"
             >
-              <Award className="w-4 h-4" />
-              <span>VỀ MENU CHÍNH</span>
+              <RotateCcw className="w-3.5 h-3.5" />
+              <span>Chơi lại</span>
             </button>
-          )}
-
-          <button
-            onClick={onReplay}
-            className="py-3 px-4 bg-slate-800 hover:bg-slate-700 text-slate-300 font-pixel text-xs rounded-xl border border-slate-700 active:scale-98 transition-all cursor-pointer flex items-center justify-center gap-1.5"
-          >
-            <RotateCcw className="w-3.5 h-3.5" />
-            <span>Chơi lại</span>
-          </button>
-        </div>
+          </div>
+        )}
       </div>
     </div>
   );
@@ -262,14 +323,18 @@ export const WardrobeModal: React.FC<WardrobeModalProps> = ({
     { id: 'coder', name: 'Nam Lập Trình', desc: 'Áo xanh hoodie, chuyên gia né bug và né sếp IT', icon: '💻' },
     { id: 'designer', name: 'Vy Thiết Kế', desc: 'Tóc highlight xanh ngọc, dị ứng với "làm logo to lên"', icon: '🎨' },
     { id: 'sales', name: 'Hoàng Chốt Đơn', desc: 'Sơ mi cà vạt bảnh bao, lẻn về đi date với khách', icon: '💼' },
-    { id: 'ninja', name: 'Ninja Công Sở', desc: 'Cao thủ lén lút, trốn về không để lại dấu vết', icon: '🥷' }
+    { id: 'ninja', name: 'Ninja Công Sở', desc: 'Cao thủ lén lút, trốn về không để lại dấu vết', icon: '🥷' },
+    { id: 'boba_lover', name: 'Thánh Trà Sữa', desc: 'Tay cầm ly trà sữa full topping, chạy siêu bền', icon: '🧋' },
+    { id: 'intern_vip', name: 'Thực Tập VIP', desc: 'Vest bảnh bao, con cưng của tập đoàn', icon: '✨' },
+    { id: 'ceo_gold', name: 'Chủ Tịch Giả Nghèo', desc: 'Suit hoàng kim dát vàng, bước đi tiền rơi lấp lánh (Mở khi thắng Ải 8)', icon: '👑' }
   ];
 
   const accessories: { id: Accessory; name: string; icon: string }[] = [
     { id: 'none', name: 'Không có', icon: '❌' },
     { id: 'box_hat', name: 'Mũ Hộp Giấy', icon: '📦' },
     { id: 'sunglasses', name: 'Kính Râm Ngầu', icon: '🕶️' },
-    { id: 'ninja_band', name: 'Băng Đô Đỏ', icon: '🧣' }
+    { id: 'ninja_band', name: 'Băng Đô Đỏ', icon: '🧣' },
+    { id: 'golden_crown', name: 'Vương Miện Vàng', icon: '👑' }
   ];
 
   return (
@@ -381,10 +446,18 @@ export const HelpModal: React.FC<HelpModalProps> = ({ onClose }) => {
           </div>
 
           <div className="flex items-start gap-3 p-2.5 bg-slate-950 rounded-xl border border-slate-800">
-            <span className="text-lg">🤫</span>
+            <span className="text-lg">⚡</span>
             <div>
-              <div className="font-bold text-emerald-400 font-pixel text-[10px] mb-0.5">RÓN RÉN & NƯỚC RÚT:</div>
-              <p>Giữ <b>Space / Shift</b> để rón rén không tạo tiếng động. Nước rút chạy nhanh nhưng sẽ làm sếp nghe thấy tiếng bước chân!</p>
+              <div className="font-bold text-amber-300 font-pixel text-[10px] mb-0.5">TĂNG TỐC THOÁT THÂN (3 GIÂY):</div>
+              <p>Nhấn <b>Shift</b> hoặc nút <b>[CHẠY]</b> để bứt tốc cực mạnh trong 3 giây (kể cả khi đang bị dí)! Sau 3 giây sẽ khóa hồi chiêu 5 giây.</p>
+            </div>
+          </div>
+
+          <div className="flex items-start gap-3 p-2.5 bg-slate-950 rounded-xl border border-slate-800">
+            <span className="text-lg">🚨</span>
+            <div>
+              <div className="font-bold text-red-400 font-pixel text-[10px] mb-0.5">KỸ NĂNG SẾP & GIỜ GIỚI NGHIÊM:</div>
+              <p>Định kỳ sếp sẽ bật <b>KỸ NĂNG QUÉT TỐC ĐỘ CAO</b> (góc nhìn rộng gấp đôi). Hãy nhanh chóng nấp vào thùng giấy! Nhớ trốn về trước khi hết đồng hồ đếm ngược.</p>
             </div>
           </div>
 
@@ -407,8 +480,8 @@ export const HelpModal: React.FC<HelpModalProps> = ({ onClose }) => {
           <div className="flex items-start gap-3 p-2.5 bg-slate-950 rounded-xl border border-slate-800">
             <span className="text-lg">🔑</span>
             <div>
-              <div className="font-bold text-purple-400 font-pixel text-[10px] mb-0.5">MỤC TIÊU:</div>
-              <p>Nhặt <b>Thẻ Từ / Chìa Khóa</b> để mở cửa thoát hiểm ở góc bản đồ rồi tẩu thoát ra ngoài!</p>
+              <div className="font-bold text-purple-400 font-pixel text-[10px] mb-0.5">MỤC TIÊU & VẬT PHẨM MỞ CỬA:</div>
+              <p>Xem danh sách <b>[📋 ĐỒ CẦN TÌM]</b> ở thanh trên. Khi nhặt đủ Thẻ/Chìa, mũi tên xanh sẽ dẫn đường ra Cửa Thoát Hiểm!</p>
             </div>
           </div>
         </div>

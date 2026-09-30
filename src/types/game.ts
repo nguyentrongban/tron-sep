@@ -1,8 +1,8 @@
-export type GameMode = 'story' | 'endless' | 'tutorial';
+export type GameMode = 'story' | 'endless' | 'tutorial' | 'nightmare' | 'boss_hunt';
 
 export type GameStatus = 'menu' | 'playing' | 'paused' | 'caught' | 'victory' | 'floor_cleared';
 
-export type CharacterSkin = 'coder' | 'designer' | 'sales' | 'ninja' | 'boba_lover' | 'intern_vip';
+export type CharacterSkin = 'coder' | 'designer' | 'sales' | 'ninja' | 'boba_lover' | 'intern_vip' | 'ceo_gold';
 
 export type Accessory = 'none' | 'box_hat' | 'ninja_band' | 'coffee_cup' | 'sunglasses' | 'golden_crown';
 
@@ -31,9 +31,14 @@ export interface Boss {
   fieldOfView: number; // in radians
   visionDistance: number;
   alertLevel: number; // 0 to 100
+  patrolWaitTimer?: number;    // Brief pause and look-around timer at waypoints
+  lastPointIndex?: number;     // Store last waypoint index to avoid immediate back-and-forth
   yellText?: string;
   yellTimer?: number;
   skin: 'boss_male' | 'boss_female' | 'hr_snitch' | 'guard';
+  isSkillActive?: boolean;      // True when rage skill (mega scan) is on
+  skillDuration?: number;       // Remaining duration of active skill (e.g. 8s)
+  skillCooldown?: number;       // Countdown until next skill trigger (e.g. 60s)
 }
 
 export interface SecurityCamera {
@@ -106,6 +111,7 @@ export interface FloorLevel {
   dialogueIntro: string[];
   dialogueCaught: string[];
   isTutorial?: boolean;
+  timeLimit?: number; // Time in seconds before Boss Enrage / Rage Scan
 }
 
 export interface PlayerUpgrades {
@@ -151,6 +157,9 @@ export interface Player {
   currentHidingSpotId: string | null;
   stamina: number;
   maxStamina: number;
+  sprintDuration: number;       // Current remaining sprint seconds (max 3s)
+  sprintCooldown: number;       // Cooldown remaining (5s after sprint)
+  isSprintOnCooldown: boolean;  // True when locked in 5s cooldown
   inventory: {
     hasCard: boolean;
     hasKey: boolean;

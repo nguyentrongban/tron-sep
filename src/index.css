@@ -12,10 +12,13 @@ html, body {
 
 @layer utilities {
   .font-pixel {
-    font-family: 'Press Start 2P', cursive, monospace;
+    font-family: 'Chakra Petch', 'Be Vietnam Pro', system-ui, sans-serif;
+    font-weight: 700;
+    letter-spacing: 0.05em;
   }
   .font-chibi {
-    font-family: 'Fredoka', 'Nunito', system-ui, sans-serif;
+    font-family: 'Nunito', system-ui, sans-serif;
+    font-weight: 700;
   }
   .font-tech {
     font-family: 'Chakra Petch', system-ui, sans-serif;

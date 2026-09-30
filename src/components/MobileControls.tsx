@@ -1,11 +1,15 @@
-import React, { useRef, useState, useEffect } from 'react';
+import React, { useRef, useState } from 'react';
 import { Package, Zap, Footprints } from 'lucide-react';
 import { Vector2D } from '../types/game';
 
 interface MobileControlsProps {
   onMoveChange: (vector: Vector2D) => void;
   onSneakToggle: (isSneaking: boolean) => void;
-  onSprintToggle: (isSprinting: boolean) => void;
+  onSprintTrigger: () => void;
+  sprintDuration: number;
+  sprintCooldown: number;
+  isSprinting: boolean;
+  isSprintOnCooldown: boolean;
   onThrowDistraction: () => void;
   onToggleHide: () => void;
   isNearHidingSpot: boolean;
@@ -16,7 +20,11 @@ interface MobileControlsProps {
 export const MobileControls: React.FC<MobileControlsProps> = ({
   onMoveChange,
   onSneakToggle,
-  onSprintToggle,
+  onSprintTrigger,
+  sprintDuration,
+  sprintCooldown,
+  isSprinting,
+  isSprintOnCooldown,
   onThrowDistraction,
   onToggleHide,
   isNearHidingSpot,
@@ -30,7 +38,6 @@ export const MobileControls: React.FC<MobileControlsProps> = ({
   const [knobPos, setKnobPos] = useState({ x: 0, y: 0 });
 
   const [isSneakingActive, setIsSneakingActive] = useState(false);
-  const [isSprintingActive, setIsSprintingActive] = useState(false);
 
   const radius = 50; // max joystick range in pixels
 
@@ -44,7 +51,6 @@ export const MobileControls: React.FC<MobileControlsProps> = ({
 
   // Handle pointer on left touch surface (dynamic floating joystick)
   const handleTouchZonePointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
-    // Only capture first pointer on joystick zone
     if (joystickTouchIdRef.current !== null) return;
 
     joystickTouchIdRef.current = e.pointerId;
@@ -105,21 +111,12 @@ export const MobileControls: React.FC<MobileControlsProps> = ({
     const next = !isSneakingActive;
     setIsSneakingActive(next);
     onSneakToggle(next);
-    if (next && isSprintingActive) {
-      setIsSprintingActive(false);
-      onSprintToggle(false);
-    }
   };
 
-  const toggleSprint = () => {
-    triggerHaptic(15);
-    const next = !isSprintingActive;
-    setIsSprintingActive(next);
-    onSprintToggle(next);
-    if (next && isSneakingActive) {
-      setIsSneakingActive(false);
-      onSneakToggle(false);
-    }
+  const handleSprintPress = () => {
+    if (isSprintOnCooldown || isSprinting) return;
+    triggerHaptic(30);
+    onSprintTrigger();
   };
 
   const handleThrow = () => {
@@ -142,7 +139,7 @@ export const MobileControls: React.FC<MobileControlsProps> = ({
         onPointerCancel={handleTouchZonePointerUp}
         className="pointer-events-auto absolute inset-y-0 left-0 w-1/2 h-full touch-none"
       >
-        {/* Render Joystick Base (Fixed initial preview when idle, or floating under thumb when active) */}
+        {/* Render Joystick Base */}
         <div
           className={`absolute rounded-full border-2 transition-opacity duration-150 flex items-center justify-center pointer-events-none shadow-2xl ${
             joystickActive
@@ -152,7 +149,7 @@ export const MobileControls: React.FC<MobileControlsProps> = ({
           style={{
             width: radius * 2 + 30,
             height: radius * 2 + 30,
-            left: joystickActive ? basePos.x - (radius + 15) : 30,
+            left: joystickActive ? basePos.x - (radius + 15) : 28,
             bottom: joystickActive ? undefined : 'calc(24px + env(safe-area-inset-bottom, 0px))',
             top: joystickActive ? basePos.y - (radius + 15) : undefined
           }}
@@ -183,24 +180,24 @@ export const MobileControls: React.FC<MobileControlsProps> = ({
 
       {/* 2. Right Side: Large Ergonomic Action Buttons */}
       <div
-        className="pointer-events-none absolute right-3 flex flex-col gap-3 items-end"
+        className="pointer-events-none absolute right-3 flex flex-col gap-2.5 items-end"
         style={{
           bottom: 'calc(16px + env(safe-area-inset-bottom, 0px))'
         }}
       >
         {/* Top Action Row: Throw Distraction & Contextual Hide */}
-        <div className="flex items-center gap-2.5">
+        <div className="flex items-center gap-2">
           {/* Throw Distraction Button */}
           <button
             onClick={handleThrow}
             disabled={distractionsCount <= 0}
-            className={`pointer-events-auto w-14 h-14 rounded-2xl flex flex-col items-center justify-center shadow-2xl transition-transform active:scale-90 border-2 touch-manipulation ${
+            className={`pointer-events-auto w-13 h-13 rounded-2xl flex flex-col items-center justify-center shadow-2xl transition-transform active:scale-90 border-2 touch-manipulation ${
               distractionsCount > 0
                 ? 'bg-amber-600/95 hover:bg-amber-500 border-amber-300 text-white shadow-amber-600/30'
                 : 'bg-slate-900/80 border-slate-700 text-slate-500'
             }`}
           >
-            <span className="text-lg">🥤</span>
+            <span className="text-base">🥤</span>
             <span className="text-[9px] font-pixel leading-tight">Ném ({distractionsCount})</span>
           </button>
 
@@ -208,13 +205,13 @@ export const MobileControls: React.FC<MobileControlsProps> = ({
           {(isNearHidingSpot || isHiding) && (
             <button
               onClick={handleHide}
-              className={`pointer-events-auto w-14 h-14 rounded-2xl flex flex-col items-center justify-center shadow-2xl transition-transform active:scale-90 border-2 touch-manipulation ${
+              className={`pointer-events-auto w-13 h-13 rounded-2xl flex flex-col items-center justify-center shadow-2xl transition-transform active:scale-90 border-2 touch-manipulation ${
                 isHiding
                   ? 'bg-amber-500 border-amber-200 text-slate-950 animate-pulse shadow-amber-500/40'
                   : 'bg-emerald-600/95 hover:bg-emerald-500 border-emerald-300 text-white shadow-emerald-600/30'
               }`}
             >
-              <Package className="w-6 h-6" />
+              <Package className="w-5 h-5" />
               <span className="text-[9px] font-pixel leading-tight">
                 {isHiding ? 'Chui Ra' : 'Nấp Vào'}
               </span>
@@ -222,12 +219,12 @@ export const MobileControls: React.FC<MobileControlsProps> = ({
           )}
         </div>
 
-        {/* Bottom Action Row: Sneak & Sprint Toggles */}
-        <div className="flex items-center gap-2.5">
+        {/* Bottom Action Row: Sneak & Sprint Burst Toggles */}
+        <div className="flex items-center gap-2">
           {/* Sneak Button */}
           <button
             onClick={toggleSneak}
-            className={`pointer-events-auto h-13 px-4 rounded-2xl flex items-center gap-1.5 shadow-2xl transition-transform active:scale-90 border-2 touch-manipulation ${
+            className={`pointer-events-auto h-12 px-3.5 rounded-2xl flex items-center gap-1.5 shadow-2xl transition-transform active:scale-90 border-2 touch-manipulation ${
               isSneakingActive
                 ? 'bg-indigo-600 border-indigo-300 text-white shadow-indigo-600/40'
                 : 'bg-slate-900/90 border-slate-700 text-slate-300'
@@ -237,17 +234,26 @@ export const MobileControls: React.FC<MobileControlsProps> = ({
             <span className="text-[10px] font-pixel">RÓN RÉN</span>
           </button>
 
-          {/* Sprint Button */}
+          {/* Sprint Burst Button (3s burst, 5s lock) */}
           <button
-            onClick={toggleSprint}
-            className={`pointer-events-auto h-13 px-4 rounded-2xl flex items-center gap-1.5 shadow-2xl transition-transform active:scale-90 border-2 touch-manipulation ${
-              isSprintingActive
-                ? 'bg-red-600 border-red-300 text-white shadow-red-600/40 animate-pulse'
-                : 'bg-slate-900/90 border-slate-700 text-slate-300'
+            onClick={handleSprintPress}
+            disabled={isSprintOnCooldown}
+            className={`pointer-events-auto h-12 min-w-28 px-3.5 rounded-2xl flex items-center justify-center gap-1.5 shadow-2xl transition-all active:scale-90 border-2 touch-manipulation cursor-pointer ${
+              isSprinting
+                ? 'bg-red-600 border-red-300 text-white shadow-red-600/50 animate-pulse ring-2 ring-red-400'
+                : isSprintOnCooldown
+                ? 'bg-slate-900/95 border-slate-700/80 text-slate-500 cursor-not-allowed opacity-80'
+                : 'bg-gradient-to-r from-amber-600 to-orange-500 border-amber-300 text-white shadow-amber-600/40'
             }`}
           >
-            <Zap className="w-4 h-4 text-amber-400" />
-            <span className="text-[10px] font-pixel">CHẠY</span>
+            <Zap className={`w-4 h-4 ${isSprinting ? 'text-amber-200 animate-bounce' : 'text-amber-300'}`} />
+            <span className="text-[10px] font-pixel whitespace-nowrap">
+              {isSprinting
+                ? `${Math.max(0.1, sprintDuration).toFixed(1)}s`
+                : isSprintOnCooldown
+                ? `HỒI ${Math.ceil(sprintCooldown)}s`
+                : '⚡ CHẠY (3s)'}
+            </span>
           </button>
         </div>
       </div>

@@ -736,16 +736,26 @@ export function drawPlayerChibi(
   if (player.skin === 'sales') shirtColor = '#ffffff';
   if (player.skin === 'ninja') shirtColor = '#18181b';
   if (player.skin === 'boba_lover') shirtColor = '#d97706'; // milk tea sweater
-  if (player.skin === 'intern_vip') shirtColor = '#f8fafc'; // crisp golden suit
+  if (player.skin === 'intern_vip') shirtColor = '#f8fafc'; // crisp suit
+  if (player.skin === 'ceo_gold') shirtColor = '#eab308'; // royal gold suit
 
   ctx.fillStyle = shirtColor;
   ctx.beginPath();
   ctx.roundRect(-10, -4, 20, 14, 3);
   ctx.fill();
 
-  // Tie for sales / intern_vip skin
-  if (player.skin === 'sales' || player.skin === 'intern_vip') {
-    ctx.fillStyle = player.skin === 'intern_vip' ? '#eab308' : '#ef4444';
+  // Golden sparkles aura for ceo_gold skin
+  if (player.skin === 'ceo_gold') {
+    ctx.fillStyle = '#fef08a';
+    const sa = Math.sin(frame * 0.15) * 6;
+    ctx.fillRect(-12 + sa, -8, 3, 3);
+    ctx.fillRect(10 - sa, -6, 2, 2);
+    ctx.fillRect(8, 12 + sa * 0.5, 3, 3);
+  }
+
+  // Tie for sales / intern_vip / ceo_gold skin
+  if (player.skin === 'sales' || player.skin === 'intern_vip' || player.skin === 'ceo_gold') {
+    ctx.fillStyle = player.skin === 'ceo_gold' ? '#7e22ce' : player.skin === 'intern_vip' ? '#eab308' : '#ef4444';
     ctx.beginPath();
     ctx.moveTo(-2, -4);
     ctx.lineTo(2, -4);

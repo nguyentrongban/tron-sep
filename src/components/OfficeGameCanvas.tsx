@@ -6,7 +6,8 @@ import {
   NoiseDistraction,
   ParticleEffect,
   Vector2D,
-  PlayerUpgrades
+  PlayerUpgrades,
+  GameMode
 } from '../types/game';
 import {
   drawOfficeFloor,
@@ -25,9 +26,11 @@ import {
   drawTutorialGuide
 } from '../utils/pixelRenderer';
 import { soundManager } from '../utils/audio';
+import { sanitizeFloorItems } from '../utils/levels';
 
 interface OfficeGameCanvasProps {
   level: FloorLevel;
+  gameMode?: GameMode;
   playerSkin: Player['skin'];
   playerAccessory: Player['accessory'];
   upgrades?: PlayerUpgrades;
@@ -38,9 +41,11 @@ interface OfficeGameCanvasProps {
   onPlayerUpdate: (player: Player) => void;
   onCollectCoin?: (amount: number) => void;
   onMissionProgress?: (missionId: string, amount: number) => void;
+  onBossSkillUpdate?: (isActive: boolean, duration: number, nextInSeconds: number) => void;
+  onTimeRemainingUpdate?: (timeRemaining: number) => void;
   mobileMoveVector: Vector2D;
   mobileSneak: boolean;
-  mobileSprint: boolean;
+  mobileSprintSignal: number;
   throwSignal: number;
   hideSignal: number;
   onNearHidingSpotChange: (isNear: boolean) => void;
@@ -48,6 +53,7 @@ interface OfficeGameCanvasProps {
 
 export const OfficeGameCanvas: React.FC<OfficeGameCanvasProps> = ({
   level,
+  gameMode = 'story',
   playerSkin,
   playerAccessory,
   upgrades = { sneakersLevel: 0, staminaLevel: 0, distractionsLevel: 0, camoBoxLevel: 0, radarLevel: 0 },
@@ -58,9 +64,11 @@ export const OfficeGameCanvas: React.FC<OfficeGameCanvasProps> = ({
   onPlayerUpdate,
   onCollectCoin,
   onMissionProgress,
+  onBossSkillUpdate,
+  onTimeRemainingUpdate,
   mobileMoveVector,
   mobileSneak,
-  mobileSprint,
+  mobileSprintSignal,
   throwSignal,
   hideSignal,
   onNearHidingSpotChange
@@ -69,6 +77,11 @@ export const OfficeGameCanvas: React.FC<OfficeGameCanvasProps> = ({
 
   const initialMaxStamina = 100 + (upgrades.staminaLevel || 0) * 20;
   const initialDistractions = 3 + (upgrades.distractionsLevel || 0);
+
+  // Sanitize level so items are guaranteed not trapped inside furniture or walls
+  const cleanLevel = sanitizeFloorItems(level);
+  const baseInterval = Math.max(35, 60 - cleanLevel.id * 3);
+  const floorSkillInterval = gameMode === 'nightmare' ? Math.max(22, Math.floor(baseInterval * 0.55)) : baseInterval;
 
   // Game internal state
   const stateRef = useRef<{
@@ -86,10 +99,14 @@ export const OfficeGameCanvas: React.FC<OfficeGameCanvasProps> = ({
     hasWon: boolean;
     hasLost: boolean;
     tutorialStep: number;
+    bossSkillTimer: number;
+    isBossSkillActive: boolean;
+    bossSkillDuration: number;
+    timeRemaining: number;
   }>({
     player: {
-      x: level.playerStart.x,
-      y: level.playerStart.y,
+      x: cleanLevel.playerStart.x,
+      y: cleanLevel.playerStart.y,
       width: 32,
       height: 32,
       speed: 3.2,
@@ -102,6 +119,9 @@ export const OfficeGameCanvas: React.FC<OfficeGameCanvasProps> = ({
       currentHidingSpotId: null,
       stamina: initialMaxStamina,
       maxStamina: initialMaxStamina,
+      sprintDuration: 0,
+      sprintCooldown: 0,
+      isSprintOnCooldown: false,
       inventory: {
         hasCard: false,
         hasKey: false,
@@ -115,8 +135,8 @@ export const OfficeGameCanvas: React.FC<OfficeGameCanvasProps> = ({
       skin: playerSkin,
       accessory: playerAccessory
     },
-    bosses: JSON.parse(JSON.stringify(level.bosses)),
-    level: JSON.parse(JSON.stringify(level)),
+    bosses: JSON.parse(JSON.stringify(cleanLevel.bosses)),
+    level: JSON.parse(JSON.stringify(cleanLevel)),
     distractions: [],
     particles: [],
     screenShake: 0,
@@ -127,7 +147,11 @@ export const OfficeGameCanvas: React.FC<OfficeGameCanvasProps> = ({
     isNearHidingSpot: false,
     hasWon: false,
     hasLost: false,
-    tutorialStep: 1
+    tutorialStep: 1,
+    bossSkillTimer: floorSkillInterval,
+    isBossSkillActive: false,
+    bossSkillDuration: 0,
+    timeRemaining: cleanLevel.timeLimit || 60
   });
 
   // Keep player skin & accessory updated
@@ -135,6 +159,36 @@ export const OfficeGameCanvas: React.FC<OfficeGameCanvasProps> = ({
     stateRef.current.player.skin = playerSkin;
     stateRef.current.player.accessory = playerAccessory;
   }, [playerSkin, playerAccessory]);
+
+  // Sprint Trigger (3s duration burst, then 5s lock)
+  const triggerSprint = useCallback(() => {
+    const s = stateRef.current;
+    if (s.player.isHiding || s.hasWon || s.hasLost) return;
+
+    // Can sprint even when boss is chasing!
+    if (s.player.sprintCooldown <= 0 && !s.player.isSprinting) {
+      s.player.isSprinting = true;
+      s.player.sprintDuration = 3.0; // 3 seconds of high speed
+      s.player.isSneaking = false;
+      soundManager.playSprintBurst();
+
+      // Dash burst particles
+      for (let i = 0; i < 8; i++) {
+        s.particles.push({
+          x: s.player.x + 16,
+          y: s.player.y + 24,
+          vx: (Math.random() - 0.5) * 4,
+          vy: (Math.random() - 0.5) * 4,
+          color: '#f97316',
+          size: 4,
+          alpha: 1,
+          life: 22,
+          maxLife: 22,
+          text: '⚡'
+        });
+      }
+    }
+  }, []);
 
   // Handle keyboard inputs
   useEffect(() => {
@@ -148,6 +202,9 @@ export const OfficeGameCanvas: React.FC<OfficeGameCanvasProps> = ({
       if (e.code === 'KeyQ' || e.code === 'KeyF') {
         throwDistraction();
       }
+      if ((e.code === 'ShiftLeft' || e.code === 'ShiftRight') && !e.repeat) {
+        triggerSprint();
+      }
     };
 
     const handleKeyUp = (e: KeyboardEvent) => {
@@ -160,7 +217,14 @@ export const OfficeGameCanvas: React.FC<OfficeGameCanvasProps> = ({
       window.removeEventListener('keydown', handleKeyDown);
       window.removeEventListener('keyup', handleKeyUp);
     };
-  }, []);
+  }, [triggerSprint]);
+
+  // Mobile Sprint Signal
+  useEffect(() => {
+    if (mobileSprintSignal > 0) {
+      triggerSprint();
+    }
+  }, [mobileSprintSignal, triggerSprint]);
 
   // Handle mobile action signals
   useEffect(() => {
@@ -229,7 +293,7 @@ export const OfficeGameCanvas: React.FC<OfficeGameCanvasProps> = ({
         maxLife: 30
       });
     }
-  }, []);
+  }, [onMissionProgress]);
 
   // Toggle hiding in nearby box / plant / desk
   const toggleHide = useCallback(() => {
@@ -259,7 +323,7 @@ export const OfficeGameCanvas: React.FC<OfficeGameCanvasProps> = ({
       };
       const dist = Math.hypot(playerCenter.x - spotCenter.x, playerCenter.y - spotCenter.y);
 
-      if (dist < 45 && !spot.isOccupied) {
+      if (dist < 50 && !spot.isOccupied) {
         s.player.isHiding = true;
         s.player.currentHidingSpotId = spot.id;
         s.player.x = spotCenter.x - s.player.width / 2;
@@ -304,7 +368,7 @@ export const OfficeGameCanvas: React.FC<OfficeGameCanvasProps> = ({
       const ctx = canvas.getContext('2d');
       if (!ctx) return;
 
-      // Handle screen resize with DPR (capped at 2 for mobile battery efficiency and 60fps)
+      // Handle screen resize with DPR (capped at 2 for performance)
       const dpr = Math.min(window.devicePixelRatio || 1, 2);
       const displayW = canvas.clientWidth;
       const displayH = canvas.clientHeight;
@@ -316,12 +380,71 @@ export const OfficeGameCanvas: React.FC<OfficeGameCanvasProps> = ({
         canvas.height = bufferH;
       }
 
+      // --- ESCAPE LEVEL TIME LIMIT CHECK ---
+      const totalElapsed = (Date.now() - s.gameStartTime) / 1000;
+      const floorLimit = s.level.timeLimit || 60;
+      const timeRemaining = Math.max(0, floorLimit - totalElapsed);
+      s.timeRemaining = timeRemaining;
+
+      if (onTimeRemainingUpdate) {
+        onTimeRemainingUpdate(timeRemaining);
+      }
+
+      // If time runs out -> Lockdown Curfew (Permanent Chase!)
+      if (timeRemaining === 0 && !s.hasWon && !s.hasLost) {
+        s.bosses.forEach((b) => {
+          b.state = 'chase';
+          b.alertLevel = 100;
+          b.yellText = 'HẾT GIỜ TAN CA! BẮT Ở LẠI OT!';
+          b.yellTimer = 60;
+        });
+      }
+
+      // --- PERIODIC BOSS RAGE SKILL (MEGA SCAN) ---
+      if (!s.isBossSkillActive) {
+        s.bossSkillTimer -= dt;
+        if (s.bossSkillTimer <= 0) {
+          // Trigger skill!
+          s.isBossSkillActive = true;
+          s.bossSkillDuration = 8.0; // 8s active
+          s.bossSkillTimer = floorSkillInterval;
+          soundManager.playSiren();
+          s.screenShake = 14;
+
+          const skillLines = [
+            '⚡ SẾP: "KỸ NĂNG QUÉT TẬP TRUNG! AI CÒN CHƯA VỀ BƯỚC RA!"',
+            '⚡ SẾP: "RA-ĐA TỐC ĐỘ CAO KHỞI ĐỘNG! KHÔNG AI THOÁT ĐƯỢC!"',
+            '⚡ SẾP: "QUÉT TOÀN BỘ VĂN PHÒNG! ĐỨNG LẠI OT VỚI TÔI!"'
+          ];
+          const yell = skillLines[Math.floor(Math.random() * skillLines.length)];
+
+          s.bosses.forEach((b) => {
+            b.isSkillActive = true;
+            b.yellText = yell;
+            b.yellTimer = 180;
+          });
+        }
+      } else {
+        s.bossSkillDuration -= dt;
+        if (s.bossSkillDuration <= 0) {
+          s.isBossSkillActive = false;
+          s.bossSkillDuration = 0;
+          s.bosses.forEach((b) => {
+            b.isSkillActive = false;
+          });
+        }
+      }
+
+      if (onBossSkillUpdate) {
+        onBossSkillUpdate(s.isBossSkillActive, s.bossSkillDuration, Math.max(0, s.bossSkillTimer));
+      }
+
       // Check if near hiding spot
       let nearSpot = false;
       const pCenter = { x: s.player.x + s.player.width / 2, y: s.player.y + s.player.height / 2 };
       for (const spot of s.level.hidingSpots) {
         const sc = { x: spot.x + spot.width / 2, y: spot.y + spot.height / 2 };
-        if (Math.hypot(pCenter.x - sc.x, pCenter.y - sc.y) < 45) {
+        if (Math.hypot(pCenter.x - sc.x, pCenter.y - sc.y) < 50) {
           nearSpot = true;
           break;
         }
@@ -329,6 +452,23 @@ export const OfficeGameCanvas: React.FC<OfficeGameCanvasProps> = ({
       if (nearSpot !== s.isNearHidingSpot) {
         s.isNearHidingSpot = nearSpot;
         onNearHidingSpotChange(nearSpot);
+      }
+
+      // --- SPRINT TIMER & COOLDOWN LOGIC (3s burst, 5s cooldown) ---
+      if (s.player.isSprinting) {
+        s.player.sprintDuration -= dt;
+        if (s.player.sprintDuration <= 0) {
+          s.player.isSprinting = false;
+          s.player.sprintDuration = 0;
+          s.player.sprintCooldown = 5.0; // Locked 5s cooldown
+          s.player.isSprintOnCooldown = true;
+        }
+      } else if (s.player.sprintCooldown > 0) {
+        s.player.sprintCooldown -= dt;
+        if (s.player.sprintCooldown <= 0) {
+          s.player.sprintCooldown = 0;
+          s.player.isSprintOnCooldown = false;
+        }
       }
 
       // --- PLAYER MOVEMENT & CONTROLS ---
@@ -347,20 +487,8 @@ export const OfficeGameCanvas: React.FC<OfficeGameCanvasProps> = ({
           moveY = mobileMoveVector.y;
         }
 
-        // Sneak and Sprint states
+        // Sneak state
         s.player.isSneaking = !!(s.keysDown['Space'] || mobileSneak);
-        s.player.isSprinting = !!(
-          (s.keysDown['ShiftLeft'] || s.keysDown['ShiftRight'] || mobileSprint) &&
-          !s.player.isSneaking &&
-          s.player.stamina > 10
-        );
-
-        // Stamina drain & recharge
-        if (s.player.isSprinting) {
-          s.player.stamina = Math.max(0, s.player.stamina - 35 * dt);
-        } else {
-          s.player.stamina = Math.min(s.player.maxStamina, s.player.stamina + 20 * dt);
-        }
 
         // Coffee boost countdown
         if (s.player.inventory.coffeeBoostTime > 0) {
@@ -376,23 +504,24 @@ export const OfficeGameCanvas: React.FC<OfficeGameCanvasProps> = ({
 
           let currentSpeed = s.player.speed;
           const sneakBonus = (upgrades.sneakersLevel || 0) * 0.12;
+
           if (s.player.isSneaking) currentSpeed *= (0.55 + sneakBonus);
-          if (s.player.isSprinting) currentSpeed *= 1.7;
-          if (s.player.inventory.coffeeBoostTime > 0) currentSpeed *= 1.4;
+          if (s.player.isSprinting) currentSpeed *= 1.85; // Massive sprint burst!
+          if (s.player.inventory.coffeeBoostTime > 0) currentSpeed *= 1.35;
 
           s.player.vx = normX * currentSpeed;
           s.player.vy = normY * currentSpeed;
 
           // Footstep audio & noise wave
           s.player.stepTimer += dt;
-          const stepInterval = s.player.isSprinting ? 0.22 : s.player.isSneaking ? 0.55 : 0.35;
+          const stepInterval = s.player.isSprinting ? 0.18 : s.player.isSneaking ? 0.55 : 0.35;
           if (s.player.stepTimer >= stepInterval) {
             s.player.stepTimer = 0;
             soundManager.playFootstep(s.player.isSneaking);
 
             // Sprinting makes loud footstep sound that bosses can hear!
             if (s.player.isSprinting) {
-              const noiseRadius = 130 * Math.max(0.4, 1 - (upgrades.sneakersLevel || 0) * 0.2);
+              const noiseRadius = 140 * Math.max(0.4, 1 - (upgrades.sneakersLevel || 0) * 0.2);
               s.distractions.push({
                 x: pCenter.x,
                 y: pCenter.y,
@@ -410,7 +539,7 @@ export const OfficeGameCanvas: React.FC<OfficeGameCanvasProps> = ({
                     boss.state = 'investigate';
                     boss.investigateTarget = { x: pCenter.x, y: pCenter.y };
                     boss.investigateTimer = 100;
-                    boss.yellText = 'Ủa tiếng chân ai?';
+                    boss.yellText = 'Ủa tiếng chạy gấp gáp ai đấy?!';
                     boss.yellTimer = 40;
                     soundManager.playQuestion();
                   }
@@ -457,11 +586,20 @@ export const OfficeGameCanvas: React.FC<OfficeGameCanvasProps> = ({
         }
         if (!collideY) s.player.y = Math.max(30, Math.min(s.level.mapHeight - 30 - s.player.height, newY));
 
-        // Check Collectibles
+        // --- CHECK COLLECTIBLES (MAGNETIC PULL & GENEROUS 46px RADIUS) ---
         for (const item of s.level.collectibles) {
           if (item.isCollected) continue;
           const dist = Math.hypot(pCenter.x - item.x, pCenter.y - item.y);
-          if (dist < 28) {
+
+          // Magnetic attraction when near (65px) so player never gets blocked by desk corners
+          if (dist < 65 && !s.player.isHiding) {
+            const pullRate = 5.5 * dt;
+            item.x += (pCenter.x - item.x) * pullRate;
+            item.y += (pCenter.y - item.y) * pullRate;
+          }
+
+          // Pickup interaction
+          if (dist < 46) {
             item.isCollected = true;
             if (item.type === 'card') {
               s.player.inventory.hasCard = true;
@@ -473,7 +611,7 @@ export const OfficeGameCanvas: React.FC<OfficeGameCanvasProps> = ({
               s.player.inventory.hasBackpack = true;
               soundManager.playPickup();
             } else if (item.type === 'coffee') {
-              s.player.inventory.coffeeBoostTime = 6;
+              s.player.inventory.coffeeBoostTime = 7;
               soundManager.playCoffeeBoost();
             } else if (item.type === 'paper_distraction') {
               s.player.inventory.distractionsCount++;
@@ -524,12 +662,10 @@ export const OfficeGameCanvas: React.FC<OfficeGameCanvasProps> = ({
 
         // Check Exit Door collision
         const exit = s.level.exitPoint;
-        const hasRequiredItem =
-          exit.requiredItemType === 'card'
-            ? s.player.inventory.hasCard
-            : exit.requiredItemType === 'key'
-            ? s.player.inventory.hasKey
-            : true;
+        const requiredItems = s.level.collectibles.filter((c) => c.requiredForExit);
+        const hasAllRequired = requiredItems.length > 0
+          ? requiredItems.every((c) => c.isCollected)
+          : (exit.requiredItemType === 'card' ? s.player.inventory.hasCard : exit.requiredItemType === 'key' ? s.player.inventory.hasKey : true);
 
         if (
           s.player.x + s.player.width > exit.x &&
@@ -537,7 +673,7 @@ export const OfficeGameCanvas: React.FC<OfficeGameCanvasProps> = ({
           s.player.y + s.player.height > exit.y &&
           s.player.y < exit.y + exit.height
         ) {
-          if (hasRequiredItem && !s.hasWon) {
+          if (hasAllRequired && !s.hasWon) {
             s.hasWon = true;
             soundManager.playVictory();
             const elapsed = (Date.now() - s.gameStartTime) / 1000;
@@ -597,6 +733,13 @@ export const OfficeGameCanvas: React.FC<OfficeGameCanvasProps> = ({
           boss.yellTimer--;
         }
 
+        // Apply Boss Skill Buffs if skill active
+        const speedMultiplier = (s.isBossSkillActive ? 1.65 : 1.0) * (gameMode === 'nightmare' ? 1.25 : 1.0);
+        const currentBossSpeed = boss.speed * speedMultiplier;
+        const visionDistanceMultiplier = (s.isBossSkillActive ? 1.7 : 1.0) * (gameMode === 'nightmare' ? 1.2 : 1.0);
+        const currentVisionDistance = boss.visionDistance * visionDistanceMultiplier;
+        const currentFOV = s.isBossSkillActive ? Math.min(Math.PI * 0.75, boss.fieldOfView * 1.5) : boss.fieldOfView;
+
         // Check if player is in boss vision cone
         let canSeePlayer = false;
         if (!s.player.isHiding && !s.hasWon && !s.hasLost) {
@@ -604,12 +747,12 @@ export const OfficeGameCanvas: React.FC<OfficeGameCanvasProps> = ({
           const dy = pCenter.y - bCenter.y;
           const dist = Math.hypot(dx, dy);
 
-          if (dist < boss.visionDistance) {
+          if (dist < currentVisionDistance) {
             const angleToPlayer = Math.atan2(dy, dx);
             let diff = Math.abs(angleToPlayer - boss.facingAngle);
             while (diff > Math.PI) diff = Math.abs(diff - Math.PI * 2);
 
-            if (diff < boss.fieldOfView / 2) {
+            if (diff < currentFOV / 2) {
               const hit = castRayAgainstWalls(bCenter.x, bCenter.y, angleToPlayer, dist, s.level.walls);
               if (hit.dist >= dist - 15) {
                 canSeePlayer = true;
@@ -621,7 +764,8 @@ export const OfficeGameCanvas: React.FC<OfficeGameCanvasProps> = ({
         // State Machine
         if (canSeePlayer) {
           // Increase alert rapidly
-          boss.alertLevel = Math.min(100, boss.alertLevel + 160 * dt);
+          const alertRate = s.isBossSkillActive ? 240 : 160;
+          boss.alertLevel = Math.min(100, boss.alertLevel + alertRate * dt);
 
           if (boss.alertLevel >= 75) {
             if (boss.state !== 'chase') {
@@ -664,12 +808,12 @@ export const OfficeGameCanvas: React.FC<OfficeGameCanvasProps> = ({
 
           if (dist > 10) {
             boss.facingAngle = Math.atan2(dy, dx);
-            const chaseSpeed = boss.speed * 1.35;
+            const chaseSpeed = currentBossSpeed * 1.35;
             boss.x += (dx / dist) * chaseSpeed;
             boss.y += (dy / dist) * chaseSpeed;
           }
 
-          // Caught check!
+          // Caught check! (36px)
           if (canSeePlayer && dist < 36 && !s.hasLost && !s.hasWon) {
             s.hasLost = true;
             soundManager.playCaught();
@@ -682,8 +826,8 @@ export const OfficeGameCanvas: React.FC<OfficeGameCanvasProps> = ({
 
           if (dist > 15) {
             boss.facingAngle = Math.atan2(dy, dx);
-            boss.x += (dx / dist) * boss.speed;
-            boss.y += (dy / dist) * boss.speed;
+            boss.x += (dx / dist) * currentBossSpeed;
+            boss.y += (dy / dist) * currentBossSpeed;
           } else {
             // Reached suspect spot, look around
             boss.investigateTimer--;
@@ -694,20 +838,65 @@ export const OfficeGameCanvas: React.FC<OfficeGameCanvasProps> = ({
             }
           }
         } else {
-          // Normal Patrol Path
+          // --- UNPREDICTABLE RANDOM PATROL PATH (ALL CORRIDORS) ---
           if (boss.patrolPoints && boss.patrolPoints.length > 0) {
-            const targetPoint = boss.patrolPoints[boss.currentPointIndex];
-            const dx = targetPoint.x - bCenter.x;
-            const dy = targetPoint.y - bCenter.y;
-            const dist = Math.hypot(dx, dy);
-
-            if (dist > 12) {
-              boss.facingAngle = Math.atan2(dy, dx);
-              boss.x += (dx / dist) * boss.speed;
-              boss.y += (dy / dist) * boss.speed;
+            // Check if boss is briefly pausing at a waypoint to inspect
+            if (boss.patrolWaitTimer && boss.patrolWaitTimer > 0) {
+              boss.patrolWaitTimer--;
+              // Look around naturally (rotate cone angle)
+              boss.facingAngle += Math.sin(s.frame * 0.12) * 0.05;
             } else {
-              // Next waypoint
-              boss.currentPointIndex = (boss.currentPointIndex + 1) % boss.patrolPoints.length;
+              // Ensure valid currentPointIndex
+              if (boss.currentPointIndex >= boss.patrolPoints.length) {
+                boss.currentPointIndex = 0;
+              }
+              const targetPoint = boss.patrolPoints[boss.currentPointIndex];
+              const dx = targetPoint.x - bCenter.x;
+              const dy = targetPoint.y - bCenter.y;
+              const dist = Math.hypot(dx, dy);
+
+              if (dist > 18) {
+                boss.facingAngle = Math.atan2(dy, dx);
+                boss.x += (dx / dist) * currentBossSpeed;
+                boss.y += (dy / dist) * currentBossSpeed;
+              } else {
+                // Arrived at waypoint! Pause 20-40 frames (~0.4s-0.8s) to scan
+                boss.patrolWaitTimer = 20 + Math.floor(Math.random() * 25);
+
+                // Choose a random NEXT waypoint index that is NOT the same as current or immediately previous point
+                if (boss.patrolPoints.length > 1) {
+                  const currentIdx = boss.currentPointIndex;
+                  const lastIdx = boss.lastPointIndex ?? -1;
+
+                  // Filter available candidate indices
+                  const candidates: number[] = [];
+                  for (let i = 0; i < boss.patrolPoints.length; i++) {
+                    if (i !== currentIdx && (boss.patrolPoints.length <= 2 || i !== lastIdx)) {
+                      candidates.push(i);
+                    }
+                  }
+
+                  const chosenIndex = candidates.length > 0
+                    ? candidates[Math.floor(Math.random() * candidates.length)]
+                    : (currentIdx + 1) % boss.patrolPoints.length;
+
+                  boss.lastPointIndex = currentIdx;
+                  boss.currentPointIndex = chosenIndex;
+                }
+
+                // 10% chance to express boss thought bubble showing unpredictable routing
+                if (Math.random() < 0.10 && (!boss.yellTimer || boss.yellTimer <= 0)) {
+                  const thoughts = [
+                    'Rà soát đường ngẫu nhiên!',
+                    'Đổi lộ trình tuần tra xem sao!',
+                    'Soi kỹ từng hẻm hành lang!',
+                    'Lẻn sang lối này bắt quả tang!',
+                    'Đi đường ngẫu nhiên chống trốn!'
+                  ];
+                  boss.yellText = thoughts[Math.floor(Math.random() * thoughts.length)];
+                  boss.yellTimer = 60;
+                }
+              }
             }
           }
         }
@@ -742,9 +931,9 @@ export const OfficeGameCanvas: React.FC<OfficeGameCanvasProps> = ({
         s.screenShake = Math.max(0, s.screenShake - 0.5);
       }
 
-      // Responsive Camera Scale: 1.25x on mobile screens for comfortable view, 1.0x on desktop
+      // Responsive Camera Scale: 1.15x - 1.25x on mobile screens
       const isMobile = displayW < 768;
-      const zoom = isMobile ? 1.25 : 1.0;
+      const zoom = isMobile ? 1.2 : 1.0;
       const viewW = displayW / zoom;
       const viewH = displayH / zoom;
       const cameraX = Math.max(0, Math.min(s.level.mapWidth - viewW, pCenter.x - viewW / 2));
@@ -758,12 +947,11 @@ export const OfficeGameCanvas: React.FC<OfficeGameCanvasProps> = ({
       drawOfficeFloor(ctx, s.level.mapWidth, s.level.mapHeight, s.frame);
 
       // 2. Exit door
-      const isExitUnlocked =
-        s.level.exitPoint.requiredItemType === 'card'
-          ? s.player.inventory.hasCard
-          : s.level.exitPoint.requiredItemType === 'key'
-          ? s.player.inventory.hasKey
-          : true;
+      const reqItems = s.level.collectibles.filter((c) => c.requiredForExit);
+      const isExitUnlocked = reqItems.length > 0
+        ? reqItems.every((c) => c.isCollected)
+        : (s.level.exitPoint.requiredItemType === 'card' ? s.player.inventory.hasCard : s.level.exitPoint.requiredItemType === 'key' ? s.player.inventory.hasKey : true);
+
       drawExitZone(ctx, s.level.exitPoint, isExitUnlocked, s.frame);
 
       // 3. Walls & Office Furniture
@@ -795,7 +983,35 @@ export const OfficeGameCanvas: React.FC<OfficeGameCanvasProps> = ({
       // 11. Particles & floating texts
       drawParticles(ctx, s.particles);
 
-      // 12. Interactive Tutorial Objective Beacon
+      // 12. Directional Arrow Beacon to Exit Gate when all required items are ready!
+      if (isExitUnlocked && !s.hasWon) {
+        const exitCenter = {
+          x: s.level.exitPoint.x + s.level.exitPoint.width / 2,
+          y: s.level.exitPoint.y + s.level.exitPoint.height / 2
+        };
+        const angleToExit = Math.atan2(exitCenter.y - pCenter.y, exitCenter.x - pCenter.x);
+
+        ctx.save();
+        ctx.translate(pCenter.x + Math.cos(angleToExit) * 50, pCenter.y + Math.sin(angleToExit) * 50);
+        ctx.rotate(angleToExit);
+
+        const pulse = Math.sin(s.frame * 0.15) * 5;
+        ctx.fillStyle = '#22c55e';
+        ctx.shadowColor = '#4ade80';
+        ctx.shadowBlur = 12;
+
+        ctx.beginPath();
+        ctx.moveTo(14 + pulse, 0);
+        ctx.lineTo(-10, -10);
+        ctx.lineTo(-5, 0);
+        ctx.lineTo(-10, 10);
+        ctx.closePath();
+        ctx.fill();
+
+        ctx.restore();
+      }
+
+      // 13. Interactive Tutorial Objective Beacon
       if (s.level.isTutorial) {
         if (s.tutorialStep === 1) {
           drawTutorialGuide(ctx, '1. Di chuyển tới bàn làm việc này', 130, 240, s.frame);
@@ -810,11 +1026,60 @@ export const OfficeGameCanvas: React.FC<OfficeGameCanvasProps> = ({
         }
       }
 
+      // 14. Nightmare Mode Darkness & Flashlight Beam
+      if (gameMode === 'nightmare') {
+        ctx.save();
+        // Darkness mask around player
+        const darkGrad = ctx.createRadialGradient(
+          pCenter.x, pCenter.y, 40,
+          pCenter.x, pCenter.y, 240
+        );
+        darkGrad.addColorStop(0, 'rgba(2, 6, 23, 0.05)');
+        darkGrad.addColorStop(0.45, 'rgba(2, 6, 23, 0.55)');
+        darkGrad.addColorStop(0.85, 'rgba(2, 6, 23, 0.93)');
+        darkGrad.addColorStop(1, 'rgba(2, 6, 23, 0.98)');
+        ctx.fillStyle = darkGrad;
+        ctx.fillRect(-200, -200, cleanLevel.mapWidth + 400, cleanLevel.mapHeight + 400);
+
+        // Flashlight beam projecting forward
+        ctx.save();
+        ctx.translate(pCenter.x, pCenter.y);
+        ctx.rotate(s.player.facingAngle);
+        const beamGrad = ctx.createRadialGradient(0, 0, 15, 140, 0, 260);
+        beamGrad.addColorStop(0, 'rgba(254, 240, 138, 0.32)');
+        beamGrad.addColorStop(0.7, 'rgba(254, 240, 138, 0.12)');
+        beamGrad.addColorStop(1, 'rgba(254, 240, 138, 0)');
+        ctx.fillStyle = beamGrad;
+        ctx.beginPath();
+        ctx.moveTo(0, 0);
+        ctx.arc(0, 0, 270, -Math.PI / 4.8, Math.PI / 4.8);
+        ctx.closePath();
+        ctx.fill();
+        ctx.restore();
+
+        ctx.restore();
+      }
+
       ctx.restore(); // restore zoom & camera offset
 
-      // 13. Radar Directional Pointers (in Screen space)
+      // 14. Radar Directional Pointers (in Screen space)
       if (upgrades.radarLevel && upgrades.radarLevel > 0) {
         drawRadarPointers(ctx, s.player, s.bosses, displayW, displayH, cameraX, cameraY);
+      }
+
+      // 15. Pulsing Screen Red Vignette during Boss Rage Skill
+      if (s.isBossSkillActive) {
+        ctx.save();
+        const pulse = 0.35 + Math.sin(s.frame * 0.18) * 0.15;
+        const grad = ctx.createRadialGradient(
+          displayW / 2, displayH / 2, Math.min(displayW, displayH) * 0.35,
+          displayW / 2, displayH / 2, Math.max(displayW, displayH) * 0.72
+        );
+        grad.addColorStop(0, 'rgba(239, 68, 68, 0)');
+        grad.addColorStop(1, `rgba(239, 68, 68, ${pulse})`);
+        ctx.fillStyle = grad;
+        ctx.fillRect(0, 0, displayW, displayH);
+        ctx.restore();
       }
 
       ctx.restore(); // restore DPR
@@ -822,7 +1087,20 @@ export const OfficeGameCanvas: React.FC<OfficeGameCanvasProps> = ({
 
     animId = requestAnimationFrame(gameLoop);
     return () => cancelAnimationFrame(animId);
-  }, [isPaused, onFloorVictory, onPlayerCaught, onAlertChange, onPlayerUpdate, mobileMoveVector, mobileSneak, mobileSprint, onNearHidingSpotChange]);
+  }, [
+    isPaused,
+    onFloorVictory,
+    onPlayerCaught,
+    onAlertChange,
+    onPlayerUpdate,
+    onBossSkillUpdate,
+    onTimeRemainingUpdate,
+    mobileMoveVector,
+    mobileSneak,
+    floorSkillInterval,
+    onNearHidingSpotChange,
+    upgrades
+  ]);
 
   return (
     <div className="relative w-full h-full bg-slate-950 overflow-hidden">

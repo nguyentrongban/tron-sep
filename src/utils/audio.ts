@@ -108,6 +108,62 @@ class SoundController {
     } catch {}
   }
 
+  public playSiren() {
+    if (this.isMuted) return;
+    this.initContext();
+    if (!this.ctx) return;
+
+    try {
+      // Sweeping police / office alarm siren for boss rage
+      const now = this.ctx.currentTime;
+      const osc = this.ctx.createOscillator();
+      const gain = this.ctx.createGain();
+
+      osc.type = 'sawtooth';
+      osc.frequency.setValueAtTime(600, now);
+      osc.frequency.linearRampToValueAtTime(1100, now + 0.25);
+      osc.frequency.linearRampToValueAtTime(600, now + 0.5);
+      osc.frequency.linearRampToValueAtTime(1100, now + 0.75);
+      osc.frequency.linearRampToValueAtTime(600, now + 1.0);
+
+      gain.gain.setValueAtTime(0.22, now);
+      gain.gain.exponentialRampToValueAtTime(0.01, now + 1.1);
+
+      osc.connect(gain);
+      gain.connect(this.ctx.destination);
+
+      osc.start(now);
+      osc.stop(now + 1.12);
+    } catch {}
+  }
+
+  public playSprintBurst() {
+    if (this.isMuted) return;
+    this.initContext();
+    if (!this.ctx) return;
+
+    try {
+      // Rapid dash whoosh
+      const now = this.ctx.currentTime;
+      const osc = this.ctx.createOscillator();
+      const gain = this.ctx.createGain();
+
+      osc.type = 'triangle';
+      osc.frequency.setValueAtTime(250, now);
+      osc.frequency.exponentialRampToValueAtTime(750, now + 0.12);
+      osc.frequency.exponentialRampToValueAtTime(300, now + 0.25);
+
+      gain.gain.setValueAtTime(0.24, now);
+      gain.gain.exponentialRampToValueAtTime(0.01, now + 0.28);
+
+      osc.connect(gain);
+      gain.connect(this.ctx.destination);
+
+      osc.start(now);
+      osc.stop(now + 0.29);
+    } catch {}
+  }
+
   public playQuestion() {
     if (this.isMuted) return;
     this.initContext();

@@ -14,6 +14,9 @@ import { GameHUD } from './components/GameHUD';
 import { MobileControls } from './components/MobileControls';
 import { IntroModal, CaughtModal, VictoryModal, WardrobeModal, HelpModal } from './components/Modals';
 import { ShopModal, MissionsModal } from './components/ShopAndMissionsModal';
+import { LuckyWheelModal } from './components/LuckyWheelModal';
+import { HallOfFameModal } from './components/HallOfFameModal';
+import { BossHuntCanvas } from './components/BossHuntCanvas';
 
 export default function App() {
   const [saveData, setSaveData] = useState<GameSaveData>(() => loadGameSaveData());
@@ -44,13 +47,22 @@ export default function App() {
   const [showHelp, setShowHelp] = useState<boolean>(false);
   const [showShop, setShowShop] = useState<boolean>(false);
   const [showMissions, setShowMissions] = useState<boolean>(false);
+  const [showLuckyWheel, setShowLuckyWheel] = useState<boolean>(false);
+  const [showHallOfFame, setShowHallOfFame] = useState<boolean>(false);
+  const [bossHuntCatchSignal, setBossHuntCatchSignal] = useState<number>(0);
 
   // Mobile virtual controls
   const [mobileMoveVector, setMobileMoveVector] = useState<Vector2D>({ x: 0, y: 0 });
   const [mobileSneak, setMobileSneak] = useState<boolean>(false);
-  const [mobileSprint, setMobileSprint] = useState<boolean>(false);
+  const [mobileSprintSignal, setMobileSprintSignal] = useState<number>(0);
   const [throwSignal, setThrowSignal] = useState<number>(0);
   const [hideSignal, setHideSignal] = useState<number>(0);
+
+  // Boss skill & escape timer live states
+  const [isBossSkillActive, setIsBossSkillActive] = useState<boolean>(false);
+  const [bossSkillDuration, setBossSkillDuration] = useState<number>(0);
+  const [bossSkillNextInSeconds, setBossSkillNextInSeconds] = useState<number>(45);
+  const [timeRemaining, setTimeRemaining] = useState<number>(60);
 
   // Synchronize save data to localStorage
   const updateSaveData = useCallback((updater: (prev: GameSaveData) => GameSaveData) => {
@@ -94,7 +106,19 @@ export default function App() {
     const idx = Math.max(0, Math.min(STORY_LEVELS.length - 1, floorId - 1));
     setGameMode('story');
     setCurrentFloorIndex(idx);
-    setCurrentLevel(STORY_LEVELS[idx]);
+    setCurrentLevel(JSON.parse(JSON.stringify(STORY_LEVELS[idx])));
+    setStatus('intro_dialogue');
+    setGameTimeSeconds(0);
+    setFloorLootCoins(0);
+    setIsPaused(false);
+  };
+
+  // Start Nightmare mode (dark office, faster bosses, 3x coin loot)
+  const handleStartNightmare = (floorId: number) => {
+    const idx = Math.max(0, Math.min(STORY_LEVELS.length - 1, floorId - 1));
+    setGameMode('nightmare');
+    setCurrentFloorIndex(idx);
+    setCurrentLevel(JSON.parse(JSON.stringify(STORY_LEVELS[idx])));
     setStatus('intro_dialogue');
     setGameTimeSeconds(0);
     setFloorLootCoins(0);
@@ -116,6 +140,30 @@ export default function App() {
   const handleConfirmStart = () => {
     setStatus('playing');
     soundManager.startBGM(false);
+  };
+
+  // Start Boss Hunt Mode (Reverse Role)
+  const handleStartBossHunt = () => {
+    setGameMode('boss_hunt');
+    setStatus('playing');
+    setIsPaused(false);
+    soundManager.startBGM(false);
+  };
+
+  // Boss Hunt Mode Victory
+  const handleBossHuntVictory = (rewardCoins: number) => {
+    updateSaveData((prev) => ({
+      ...prev,
+      coins: prev.coins + rewardCoins,
+      achievements: prev.achievements.map((a) => (a.id === 'boss_hunt_master' ? { ...a, isCompleted: true } : a))
+    }));
+    soundManager.stopBGM();
+    setStatus('menu');
+  };
+
+  const handleBossHuntDefeat = () => {
+    soundManager.stopBGM();
+    setStatus('menu');
   };
 
   // Live item coin collection
@@ -204,10 +252,14 @@ export default function App() {
     setEscapeTime(timeTaken);
 
     // Calculate coin reward
-    const baseWage = 60;
-    const speedBonus = timeTaken < 25 ? 25 : 0;
-    const stealthBonus = alertLevel < 20 ? 25 : 0;
-    const totalAwarded = baseWage + speedBonus + stealthBonus + floorLootCoins;
+    const isNightmare = gameMode === 'nightmare';
+    const isLastFloor = currentFloorIndex >= STORY_LEVELS.length - 1;
+    const baseWage = isNightmare ? 180 : 60;
+    const speedBonus = timeTaken < 25 ? (isNightmare ? 75 : 25) : 0;
+    const stealthBonus = alertLevel < 20 ? (isNightmare ? 75 : 25) : 0;
+    const calculatedLoot = isNightmare ? floorLootCoins * 3 : floorLootCoins;
+    const grandClearBonus = (gameMode === 'story' && isLastFloor) ? 500 : 0;
+    const totalAwarded = baseWage + speedBonus + stealthBonus + calculatedLoot + grandClearBonus;
 
     setFloorCoinsEarned(totalAwarded);
 
@@ -215,6 +267,18 @@ export default function App() {
     updateSaveData((prev) => {
       const nextCoins = prev.coins + totalAwarded;
       const nextEscapes = prev.totalEscapes + 1;
+      const hasWonCampaign = (gameMode === 'story' && isLastFloor) || Boolean(prev.hasBeatenGame);
+
+      // Unlock secret skins and accessories when beating 8 floors!
+      const newSkins = [...prev.unlockedSkins];
+      if (hasWonCampaign && !newSkins.includes('ceo_gold')) {
+        newSkins.push('ceo_gold');
+      }
+
+      const newAccessories = [...prev.unlockedAccessories];
+      if (hasWonCampaign && !newAccessories.includes('golden_crown')) {
+        newAccessories.push('golden_crown');
+      }
 
       // Check achievements
       const updatedAchievements = prev.achievements.map((ach) => {
@@ -223,6 +287,7 @@ export default function App() {
           if (ach.id === 'speedrunner_1730' && timeTaken < 20) return { ...ach, isCompleted: true };
           if (ach.id === 'stealth_master' && alertLevel < 15) return { ...ach, isCompleted: true };
           if (ach.id === 'rich_employee' && nextCoins >= 1000) return { ...ach, isCompleted: true };
+          if (ach.id === 'beat_all_8_floors' && hasWonCampaign) return { ...ach, isCompleted: true };
         }
         return ach;
       });
@@ -232,12 +297,14 @@ export default function App() {
         coins: nextCoins,
         totalEscapes: nextEscapes,
         hasCompletedTutorial: gameMode === 'tutorial' ? true : prev.hasCompletedTutorial,
+        hasBeatenGame: hasWonCampaign,
+        unlockedSkins: newSkins,
+        unlockedAccessories: newAccessories,
         achievements: updatedAchievements
       };
     });
 
-    if (gameMode === 'story') {
-      const isLastFloor = currentFloorIndex >= STORY_LEVELS.length - 1;
+    if (gameMode === 'story' || gameMode === 'nightmare') {
       setStatus(isLastFloor ? 'game_complete' : 'floor_cleared');
     } else if (gameMode === 'tutorial') {
       setStatus('floor_cleared');
@@ -261,11 +328,11 @@ export default function App() {
   // Next floor after victory
   const handleNextFloor = () => {
     setFloorLootCoins(0);
-    if (gameMode === 'story') {
+    if (gameMode === 'story' || gameMode === 'nightmare') {
       const nextIdx = currentFloorIndex + 1;
       if (nextIdx < STORY_LEVELS.length) {
         setCurrentFloorIndex(nextIdx);
-        setCurrentLevel(STORY_LEVELS[nextIdx]);
+        setCurrentLevel(JSON.parse(JSON.stringify(STORY_LEVELS[nextIdx])));
         setStatus('intro_dialogue');
         setGameTimeSeconds(0);
       } else {
@@ -286,7 +353,7 @@ export default function App() {
   // Replay current floor
   const handleReplayFloor = () => {
     setFloorLootCoins(0);
-    if (gameMode === 'story') {
+    if (gameMode === 'story' || gameMode === 'nightmare') {
       setCurrentLevel(JSON.parse(JSON.stringify(STORY_LEVELS[currentFloorIndex])));
     } else if (gameMode === 'tutorial') {
       setCurrentLevel(JSON.parse(JSON.stringify(TUTORIAL_LEVEL)));
@@ -315,28 +382,45 @@ export default function App() {
           onStartStory={handleStartStory}
           onStartEndless={handleStartEndless}
           onStartTutorial={handleStartTutorial}
+          onStartNightmare={(flId) => handleStartStory(flId)}
+          onStartBossHunt={handleStartBossHunt}
           onOpenShop={() => setShowShop(true)}
           onOpenMissions={() => setShowMissions(true)}
           onOpenWardrobe={() => setShowWardrobe(true)}
           onOpenHelp={() => setShowHelp(true)}
+          onOpenLuckyWheel={() => setShowLuckyWheel(true)}
+          onOpenHallOfFame={() => setShowHallOfFame(true)}
           isMuted={isMuted}
           onToggleMute={handleToggleMute}
           currentSkin={playerSkin}
           currentAccessory={playerAccessory}
           highScoreEndless={saveData.highScoreEndless}
           coins={saveData.coins}
+          hasBeatenGame={saveData.unlockedSkins.includes('ceo_gold') || saveData.totalEscapes >= 8}
           unclaimedMissionsCount={unclaimedCount}
         />
       )}
 
-      {/* 2. Live Game Screen (Canvas + HUD + Touch Controls) */}
-      {(status === 'playing' || status === 'paused' || status === 'intro_dialogue' || status === 'caught' || status === 'floor_cleared' || status === 'game_complete') && (
+      {/* 2. REVERSE ROLE: BOSS HUNT MODE */}
+      {gameMode === 'boss_hunt' && status === 'playing' && (
+        <BossHuntCanvas
+          onVictory={handleBossHuntVictory}
+          onDefeat={handleBossHuntDefeat}
+          onExit={() => setStatus('menu')}
+          mobileMoveVector={mobileMoveVector}
+          catchSignal={bossHuntCatchSignal}
+        />
+      )}
+
+      {/* 3. Live Game Screen (Story / Endless / Tutorial Canvas + HUD + Touch Controls) */}
+      {gameMode !== 'boss_hunt' && (status === 'playing' || status === 'paused' || status === 'intro_dialogue' || status === 'caught' || status === 'floor_cleared' || status === 'game_complete') && (
         <div className="relative w-full h-full flex flex-col">
           {/* Main Canvas Viewport */}
           <div className="relative flex-1 w-full h-full">
             <OfficeGameCanvas
-              key={`level_${currentLevel.id}_${gameTimeSeconds === 0 ? 'fresh' : 'active'}`}
+              key={`level_${currentLevel.id}_${gameMode}_${gameTimeSeconds === 0 ? 'fresh' : 'active'}`}
               level={currentLevel}
+              gameMode={gameMode}
               playerSkin={playerSkin}
               playerAccessory={playerAccessory}
               upgrades={saveData.upgrades}
@@ -347,9 +431,15 @@ export default function App() {
               onPlayerUpdate={setPlayerState}
               onCollectCoin={handleCollectCoin}
               onMissionProgress={handleMissionProgress}
+              onBossSkillUpdate={(active, duration, nextInSec) => {
+                setIsBossSkillActive(active);
+                setBossSkillDuration(duration);
+                setBossSkillNextInSeconds(nextInSec);
+              }}
+              onTimeRemainingUpdate={setTimeRemaining}
               mobileMoveVector={mobileMoveVector}
               mobileSneak={mobileSneak}
-              mobileSprint={mobileSprint}
+              mobileSprintSignal={mobileSprintSignal}
               throwSignal={throwSignal}
               hideSignal={hideSignal}
               onNearHidingSpotChange={setIsNearHidingSpot}
@@ -362,6 +452,10 @@ export default function App() {
                 level={currentLevel}
                 maxAlert={alertLevel}
                 gameTimeSeconds={gameTimeSeconds}
+                timeRemaining={timeRemaining}
+                isBossSkillActive={isBossSkillActive}
+                bossSkillDuration={bossSkillDuration}
+                bossSkillNextInSeconds={bossSkillNextInSeconds}
                 isMuted={isMuted}
                 isPaused={isPaused}
                 onToggleMute={handleToggleMute}
@@ -369,6 +463,7 @@ export default function App() {
                 onOpenHelp={() => setShowHelp(true)}
                 onThrowDistraction={() => setThrowSignal((prev) => prev + 1)}
                 onToggleHide={() => setHideSignal((prev) => prev + 1)}
+                onTriggerSprint={() => setMobileSprintSignal((prev) => prev + 1)}
                 onSkipTutorial={currentLevel.isTutorial ? () => handleStartStory(1) : undefined}
                 isNearHidingSpot={isNearHidingSpot}
               />
@@ -379,7 +474,11 @@ export default function App() {
               <MobileControls
                 onMoveChange={setMobileMoveVector}
                 onSneakToggle={setMobileSneak}
-                onSprintToggle={setMobileSprint}
+                onSprintTrigger={() => setMobileSprintSignal((prev) => prev + 1)}
+                sprintDuration={playerState?.sprintDuration || 0}
+                sprintCooldown={playerState?.sprintCooldown || 0}
+                isSprinting={playerState?.isSprinting || false}
+                isSprintOnCooldown={playerState?.isSprintOnCooldown || false}
                 onThrowDistraction={() => setThrowSignal((prev) => prev + 1)}
                 onToggleHide={() => setHideSignal((prev) => prev + 1)}
                 isNearHidingSpot={isNearHidingSpot}
@@ -391,12 +490,12 @@ export default function App() {
         </div>
       )}
 
-      {/* 3. Intro Mission Dialogue Modal */}
+      {/* 4. Intro Mission Dialogue Modal */}
       {status === 'intro_dialogue' && (
         <IntroModal level={currentLevel} onStart={handleConfirmStart} />
       )}
 
-      {/* 4. Caught / OT Game Over Modal */}
+      {/* 5. Caught / OT Game Over Modal */}
       {status === 'caught' && (
         <CaughtModal
           level={currentLevel}
@@ -405,7 +504,7 @@ export default function App() {
         />
       )}
 
-      {/* 5. Floor Victory or Game Complete Modal */}
+      {/* 6. Floor Victory or Game Complete Modal */}
       {(status === 'floor_cleared' || status === 'game_complete') && (
         <VictoryModal
           level={currentLevel}
@@ -416,10 +515,32 @@ export default function App() {
           onNextFloor={handleNextFloor}
           onReplay={handleReplayFloor}
           onGoToMenu={handleGoToMenu}
+          onStartBossHunt={handleStartBossHunt}
+          onStartNightmare={() => handleStartNightmare(1)}
         />
       )}
 
-      {/* 6. Shop Modal */}
+      {/* 7. Lucky Wheel Modal */}
+      {showLuckyWheel && (
+        <LuckyWheelModal
+          coins={saveData.coins}
+          onRewardCoins={(amount) => updateSaveData((prev) => ({ ...prev, coins: prev.coins + amount }))}
+          onClose={() => setShowLuckyWheel(false)}
+        />
+      )}
+
+      {/* 8. Hall of Fame Modal */}
+      {showHallOfFame && (
+        <HallOfFameModal
+          totalEscapes={saveData.totalEscapes}
+          highScoreEndless={saveData.highScoreEndless}
+          achievements={saveData.achievements}
+          hasBeatenGame={saveData.unlockedSkins.includes('ceo_gold') || saveData.totalEscapes >= 8}
+          onClose={() => setShowHallOfFame(false)}
+        />
+      )}
+
+      {/* 9. Shop Modal */}
       {showShop && (
         <ShopModal
           coins={saveData.coins}
@@ -433,7 +554,7 @@ export default function App() {
         />
       )}
 
-      {/* 7. Missions & Achievements Modal */}
+      {/* 10. Missions & Achievements Modal */}
       {showMissions && (
         <MissionsModal
           dailyMissions={saveData.dailyMissions}
@@ -443,7 +564,7 @@ export default function App() {
         />
       )}
 
-      {/* 8. Wardrobe Modal */}
+      {/* 11. Wardrobe Modal */}
       {showWardrobe && (
         <WardrobeModal
           currentSkin={playerSkin}
@@ -454,7 +575,7 @@ export default function App() {
         />
       )}
 
-      {/* 9. How-To-Play Guide Modal */}
+      {/* 12. How-To-Play Guide Modal */}
       {showHelp && <HelpModal onClose={() => setShowHelp(false)} />}
     </div>
   );

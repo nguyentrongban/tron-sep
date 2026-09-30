@@ -5,6 +5,7 @@ const STORAGE_KEY = 'tron_sep_progression_v2';
 export interface GameSaveData {
   coins: number;
   hasCompletedTutorial: boolean;
+  hasBeatenGame?: boolean;
   upgrades: PlayerUpgrades;
   unlockedSkins: CharacterSkin[];
   unlockedAccessories: Accessory[];
@@ -116,6 +117,14 @@ export const DEFAULT_ACHIEVEMENTS: AchievementItem[] = [
     desc: 'Tích lũy tổng cộng 1.000 tiền thưởng',
     icon: '💰',
     rewardCoins: 250,
+    isCompleted: false
+  },
+  {
+    id: 'beat_all_8_floors',
+    title: 'Huyền Thoại Chống OT',
+    desc: 'Vượt qua toàn bộ 8 Ải chiến dịch và bước ra khỏi tòa nhà',
+    icon: '👑',
+    rewardCoins: 500,
     isCompleted: false
   }
 ];
