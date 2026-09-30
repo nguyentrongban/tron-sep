@@ -383,6 +383,14 @@ export default function App() {
 
   return (
     <div className="fixed inset-0 w-full h-[100dvh] overflow-hidden bg-slate-950 text-slate-100 select-none touch-none">
+      {/* Mobile Portrait Rotation Prompt for Fullscreen Landscape */}
+      <div className="md:hidden portrait:flex hidden fixed inset-0 z-[100] bg-slate-950/95 backdrop-blur-md flex-col items-center justify-center p-6 text-center">
+        <div className="animate-bounce mb-4 text-4xl">📱 🔄</div>
+        <h3 className="font-pixel text-amber-300 text-base mb-2">VUI LÒNG XOAY NGANG MÀN HÌNH</h3>
+        <p className="text-slate-300 font-pixel text-xs max-w-xs leading-relaxed">
+          Game "Trốn Sếp Tan Ca" chuẩn Fullscreen Landscape. Hãy xoay ngang thiết bị để trải nghiệm tối đa góc nhìn!
+        </p>
+      </div>
       {/* 1. Main Menu Screen */}
       {status === 'menu' && (
         <MainMenu

@@ -1,4 +1,13 @@
 import { Player, Boss, SecurityCamera, HidingSpot, ItemCollectible, WallObstacle, NoiseDistraction, ParticleEffect } from '../types/game';
+import mapBgAsset from '../assets/images/pixel_office_map_1600x896_1790746436914.jpg';
+
+// Preload Map Image
+const cachedOfficeMapImg = new Image();
+cachedOfficeMapImg.src = mapBgAsset;
+let isOfficeMapImgLoaded = false;
+cachedOfficeMapImg.onload = () => {
+  isOfficeMapImgLoaded = true;
+};
 
 // Check if a line segment intersects another line segment
 export function getLineIntersection(
@@ -78,25 +87,70 @@ export function drawOfficeFloor(
   height: number,
   frame: number
 ) {
-  const tileSize = 40;
   ctx.save();
 
-  // Base carpet color
-  ctx.fillStyle = '#1e2430';
+  // If the 1600x896 map image is loaded, render it directly as the background map
+  if (width === 1600 && height === 896 && isOfficeMapImgLoaded) {
+    ctx.drawImage(cachedOfficeMapImg, 0, 0, width, height);
+
+    // Subtle ambient lighting overlay
+    ctx.fillStyle = 'rgba(11, 9, 26, 0.15)';
+    ctx.fillRect(0, 0, width, height);
+    ctx.restore();
+    return;
+  }
+
+  const tileSize = (width === 1600 || width % 32 === 0) ? 32 : 40;
+
+  // Dark purple/indigo base carpet color matching "Trốn Sếp Tan Ca"
+  ctx.fillStyle = '#0B091A';
   ctx.fillRect(0, 0, width, height);
 
-  // Checkerboard subtle pattern
-  ctx.fillStyle = '#222938';
+  // 32x32 Checkerboard & carpet pattern
   for (let y = 0; y < height; y += tileSize) {
     for (let x = 0; x < width; x += tileSize) {
-      if ((x / tileSize + y / tileSize) % 2 === 0) {
+      const col = Math.floor(x / tileSize);
+      const row = Math.floor(y / tileSize);
+
+      // Boundary wall tile background shadow
+      if (col === 0 || row === 0 || col === Math.floor(width / tileSize) - 1 || row === Math.floor(height / tileSize) - 1) {
+        ctx.fillStyle = '#05040F';
+      } else if ((col + row) % 2 === 0) {
+        ctx.fillStyle = '#13102C'; // Main office floor tile A
+      } else {
+        ctx.fillStyle = '#1A163B'; // Main office floor tile B
+      }
+      ctx.fillRect(x, y, tileSize, tileSize);
+
+      // Corridor / Highway Carpet Runners (wide aisles)
+      const isMainAisleHorizontal = (row >= 15 && row <= 17);
+      const isMainAisleVertical = (col >= 12 && col <= 14) || (col >= 25 && col <= 27) || (col >= 38 && col <= 40);
+
+      if (isMainAisleHorizontal || isMainAisleVertical) {
+        ctx.fillStyle = '#231F4D'; // Carpet runner
         ctx.fillRect(x, y, tileSize, tileSize);
+
+        // Subtle carpet inner stitch line
+        if ((col + row) % 2 === 0) {
+          ctx.fillStyle = '#2D2862';
+          ctx.fillRect(x + 4, y + 4, tileSize - 8, tileSize - 8);
+        }
+      }
+
+      // Executive room carpet (cols 36..48, rows 1..18)
+      if (col >= 36 && col <= 48 && row >= 1 && row <= 18) {
+        ctx.fillStyle = '#2A1F52';
+        ctx.fillRect(x, y, tileSize, tileSize);
+        if ((col + row) % 2 === 0) {
+          ctx.fillStyle = '#342663';
+          ctx.fillRect(x + 2, y + 2, tileSize - 4, tileSize - 4);
+        }
       }
     }
   }
 
-  // Subtle floor grid lines
-  ctx.strokeStyle = '#181f2c';
+  // 32x32 Pixel tile grid lines
+  ctx.strokeStyle = '#181432';
   ctx.lineWidth = 1;
   ctx.beginPath();
   for (let x = 0; x < width; x += tileSize) {
@@ -108,12 +162,6 @@ export function drawOfficeFloor(
     ctx.lineTo(width, y);
   }
   ctx.stroke();
-
-  // Subtle electrical wires / tape marks on floor
-  ctx.strokeStyle = '#334155';
-  ctx.lineWidth = 2;
-  ctx.strokeRect(380, 200, 160, 2);
-  ctx.strokeRect(180, 400, 120, 2);
 
   ctx.restore();
 }

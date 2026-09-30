@@ -799,6 +799,42 @@ export const OfficeGameCanvas: React.FC<OfficeGameCanvasProps> = ({
         if (boss.state === 'chase') anyBossChasing = true;
         if (boss.alertLevel > highestAlert) highestAlert = boss.alertLevel;
 
+        // Helper function for moving boss with wall collisions
+        const moveBossWithCollision = (stepX: number, stepY: number) => {
+          const nextX = boss.x + stepX;
+          const nextY = boss.y + stepY;
+
+          // Check horizontal wall collision for boss
+          let collideX = false;
+          for (const wall of s.level.walls) {
+            if (
+              nextX < wall.x + wall.width &&
+              nextX + boss.width > wall.x &&
+              boss.y < wall.y + wall.height &&
+              boss.y + boss.height > wall.y
+            ) {
+              collideX = true;
+              break;
+            }
+          }
+          if (!collideX) boss.x = Math.max(30, Math.min(s.level.mapWidth - 30 - boss.width, nextX));
+
+          // Check vertical wall collision for boss
+          let collideY = false;
+          for (const wall of s.level.walls) {
+            if (
+              boss.x < wall.x + wall.width &&
+              boss.x + boss.width > wall.x &&
+              nextY < wall.y + wall.height &&
+              nextY + boss.height > wall.y
+            ) {
+              collideY = true;
+              break;
+            }
+          }
+          if (!collideY) boss.y = Math.max(30, Math.min(s.level.mapHeight - 30 - boss.height, nextY));
+        };
+
         // Boss movement based on state
         if (boss.state === 'chase' && boss.investigateTarget) {
           const target = canSeePlayer ? pCenter : boss.investigateTarget;
@@ -809,8 +845,7 @@ export const OfficeGameCanvas: React.FC<OfficeGameCanvasProps> = ({
           if (dist > 10) {
             boss.facingAngle = Math.atan2(dy, dx);
             const chaseSpeed = currentBossSpeed * 1.35;
-            boss.x += (dx / dist) * chaseSpeed;
-            boss.y += (dy / dist) * chaseSpeed;
+            moveBossWithCollision((dx / dist) * chaseSpeed, (dy / dist) * chaseSpeed);
           }
 
           // Caught check! (36px)
@@ -826,8 +861,7 @@ export const OfficeGameCanvas: React.FC<OfficeGameCanvasProps> = ({
 
           if (dist > 15) {
             boss.facingAngle = Math.atan2(dy, dx);
-            boss.x += (dx / dist) * currentBossSpeed;
-            boss.y += (dy / dist) * currentBossSpeed;
+            moveBossWithCollision((dx / dist) * currentBossSpeed, (dy / dist) * currentBossSpeed);
           } else {
             // Reached suspect spot, look around
             boss.investigateTimer--;
@@ -857,8 +891,7 @@ export const OfficeGameCanvas: React.FC<OfficeGameCanvasProps> = ({
 
               if (dist > 18) {
                 boss.facingAngle = Math.atan2(dy, dx);
-                boss.x += (dx / dist) * currentBossSpeed;
-                boss.y += (dy / dist) * currentBossSpeed;
+                moveBossWithCollision((dx / dist) * currentBossSpeed, (dy / dist) * currentBossSpeed);
               } else {
                 // Arrived at waypoint! Pause 20-40 frames (~0.4s-0.8s) to scan
                 boss.patrolWaitTimer = 20 + Math.floor(Math.random() * 25);

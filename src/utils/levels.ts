@@ -82,85 +82,158 @@ export const TUTORIAL_LEVEL: FloorLevel = {
 };
 
 export const STORY_LEVELS: FloorLevel[] = [
-  // ẢI 1: TẦNG 5 - PHÒNG THỰC TẬP & QA (DỄ)
+  // ẢI 1: BẢN ĐỒ VĂN PHÒNG TỔNG 1600X896 (FULL COLLISION MATCHING BACKGROUND MAP)
   {
     id: 1,
-    title: 'ẢI 1: TẦNG 5 - PHÒNG THỰC TẬP & QA',
-    subtitle: 'Nhiệm vụ: Lấy Thẻ Chấm Công & Ba Lô để xuống Tầng 4!',
-    deptName: 'Khu Thực Tập Sinh & Kiểm Thử QA',
-    mapWidth: 950,
-    mapHeight: 650,
-    playerStart: { x: 80, y: 90 },
-    exitPoint: { x: 860, y: 530, width: 60, height: 75, requiredItemType: 'card' },
-    timeLimit: 75, // 75 seconds countdown before Enrage
+    title: 'ẢI 1: VĂN PHÒNG TỔNG TẦNG 1600X896',
+    subtitle: 'Nhiệm vụ: Lấy Thẻ Chấm Công VIP & Ba Lô, né Sếp để thoát Cửa EXIT góc phải!',
+    deptName: 'Khu Văn Phòng Tổng Hợp VIP (1600x896 Pixel)',
+    mapWidth: 1600,
+    mapHeight: 896,
+    playerStart: { x: 100, y: 780 },
+    exitPoint: { x: 1450, y: 60, width: 90, height: 70, requiredItemType: 'card' },
+    timeLimit: 90,
     dialogueIntro: [
-      'Đúng 17:30! Chuông tan ca vừa điểm, anh Mentor QA đang đi kiểm tra bài test!',
-      'Nhanh tay lấy Ba Lô và Thẻ Chấm Công rồi lẻn ra thang bộ trước khi sếp phát hiện!'
+      'Đúng 17:30! Văn phòng tổng 1600x896 đã hết giờ làm việc!',
+      'LƯU Ý: Tất cả bàn ghế, tủ server và tường đều là vật thể cứng không thể đi xuyên!',
+      'Hãy di chuyển theo đúng hành lang trống, lấy Thẻ Chấm Công VIP và thoát ra Cửa EXIT góc phải!'
     ],
     dialogueCaught: [
-      'Anh Mentor: "Ơ kìa em ơi! Còn 10 cái bug chưa log xong mà đã chuồn rồi à?"',
-      'Bạn bị bắt ở lại viết test case đến 21:00...'
+      'Sếp Tổng: "Chạy đi đâu đấy em? Còn 20 bản báo cáo KPI chưa nộp mà đã định về à?"',
+      'Bạn bị bắt làm OT xuyên đêm đến 22:00...'
     ],
     walls: [
-      { x: 0, y: 0, width: 950, height: 25, type: 'wall' },
-      { x: 0, y: 625, width: 950, height: 25, type: 'wall' },
-      { x: 0, y: 0, width: 25, height: 650, type: 'wall' },
-      { x: 925, y: 0, width: 25, height: 650, type: 'wall' },
+      // 1. SURROUNDING OUTER BOUNDARY WALLS (Tường bao quanh toàn bộ 1600x896)
+      { x: 0, y: 0, width: 1600, height: 60, type: 'wall' },        // Top outer wall
+      { x: 0, y: 836, width: 1600, height: 60, type: 'wall' },      // Bottom outer wall
+      { x: 0, y: 0, width: 60, height: 896, type: 'wall' },        // Left outer wall
+      { x: 1540, y: 0, width: 60, height: 896, type: 'wall' },      // Right outer wall
 
-      { x: 50, y: 190, width: 200, height: 40, type: 'cubicle', label: 'Bàn QA 1' },
-      { x: 50, y: 320, width: 200, height: 40, type: 'cubicle', label: 'Bàn QA 2' },
+      // 2. IT & SERVER ROOM (Top-Left)
+      { x: 80, y: 60, width: 260, height: 80, type: 'server', label: 'Tủ Server IT' },
+      { x: 80, y: 180, width: 140, height: 60, type: 'water_cooler', label: 'Bình Nước IT' },
+      { x: 380, y: 60, width: 24, height: 280, type: 'wall' },      // IT Partition wall
 
-      { x: 380, y: 130, width: 220, height: 45, type: 'cubicle', label: 'Bàn Test Thiết Bị' },
-      { x: 380, y: 300, width: 220, height: 45, type: 'cubicle', label: 'Cụm QA Lead' },
+      // 3. QA & TESTING CUBICLES (Mid-Left & Center-Left)
+      { x: 80, y: 280, width: 260, height: 90, type: 'cubicle', label: 'Bàn QA 1' },
+      { x: 80, y: 420, width: 260, height: 90, type: 'cubicle', label: 'Bàn QA 2' },
+      { x: 80, y: 560, width: 260, height: 90, type: 'cubicle', label: 'Bàn QA 3' },
 
-      { x: 680, y: 25, width: 20, height: 260, type: 'wall' },
-      { x: 680, y: 285, width: 160, height: 20, type: 'wall' }
+      // 4. RECEPTION & LOBBY (Bottom-Left)
+      { x: 80, y: 700, width: 280, height: 100, type: 'cubicle', label: 'Quầy Lễ Tân' },
+
+      // 5. DEVELOPER & ENGINEERING DEPARTMENT (Center-Left)
+      { x: 420, y: 120, width: 24, height: 600, type: 'wall' },     // Dev Divider Partition
+      { x: 480, y: 160, width: 280, height: 90, type: 'cubicle', label: 'Bàn Frontend' },
+      { x: 480, y: 300, width: 280, height: 90, type: 'cubicle', label: 'Bàn Backend' },
+      { x: 480, y: 440, width: 280, height: 90, type: 'cubicle', label: 'Bàn Fullstack' },
+      { x: 480, y: 580, width: 280, height: 90, type: 'cubicle', label: 'Bàn Mobile' },
+      { x: 480, y: 710, width: 280, height: 90, type: 'cubicle', label: 'Bàn DevOps' },
+
+      // 6. HR & MARKETING DEPARTMENT (Center-Right)
+      { x: 820, y: 120, width: 24, height: 600, type: 'wall' },     // HR Divider Partition
+      { x: 880, y: 160, width: 260, height: 90, type: 'cubicle', label: 'Bàn HR' },
+      { x: 880, y: 300, width: 260, height: 90, type: 'cubicle', label: 'Bàn Marketing' },
+      { x: 880, y: 440, width: 260, height: 90, type: 'cubicle', label: 'Bàn UI/UX' },
+      { x: 880, y: 580, width: 260, height: 90, type: 'cubicle', label: 'Bàn Sales' },
+      { x: 880, y: 710, width: 260, height: 90, type: 'cubicle', label: 'Sofa Lounge' },
+
+      // 7. EXECUTIVE DEPARTMENT & BOARDROOM (Top-Right)
+      { x: 1180, y: 60, width: 24, height: 660, type: 'wall' },    // Executive Glass Divider
+      { x: 1240, y: 140, width: 260, height: 90, type: 'cubicle', label: 'Bàn Giám Đốc' },
+      { x: 1240, y: 320, width: 260, height: 110, type: 'cubicle', label: 'Bàn Họp Giám Đốc' },
+      { x: 1240, y: 500, width: 260, height: 90, type: 'wall', label: 'Sofa Giám Đốc' },
+
+      // 8. EXIT HALLWAY & SECURITY BARRIER (Far Right)
+      { x: 1420, y: 140, width: 24, height: 680, type: 'wall' },    // Security Partition
+      { x: 1440, y: 140, width: 100, height: 40, type: 'door_locked', label: 'Cổng An Ninh' }
     ],
     hidingSpots: [
-      { id: 'f5_box1', type: 'box', x: 270, y: 100, width: 50, height: 50, isOccupied: false },
-      { id: 'f5_plant1', type: 'plant', x: 620, y: 60, width: 45, height: 50, isOccupied: false },
-      { id: 'f5_box2', type: 'box', x: 300, y: 440, width: 50, height: 50, isOccupied: false },
-      { id: 'f5_plant2', type: 'plant', x: 620, y: 440, width: 45, height: 50, isOccupied: false }
+      { id: 'm1600_box1', type: 'box', x: 350, y: 180, width: 48, height: 48, isOccupied: false },
+      { id: 'm1600_box2', type: 'box', x: 350, y: 380, width: 48, height: 48, isOccupied: false },
+      { id: 'm1600_box3', type: 'box', x: 780, y: 260, width: 48, height: 48, isOccupied: false },
+      { id: 'm1600_box4', type: 'box', x: 1140, y: 260, width: 48, height: 48, isOccupied: false },
+      { id: 'm1600_box5', type: 'box', x: 1380, y: 260, width: 48, height: 48, isOccupied: false },
+
+      { id: 'm1600_plant1', type: 'plant', x: 350, y: 100, width: 40, height: 48, isOccupied: false },
+      { id: 'm1600_plant2', type: 'plant', x: 380, y: 780, width: 40, height: 48, isOccupied: false },
+      { id: 'm1600_plant3', type: 'plant', x: 780, y: 780, width: 40, height: 48, isOccupied: false },
+      { id: 'm1600_plant4', type: 'plant', x: 1150, y: 780, width: 40, height: 48, isOccupied: false },
+      { id: 'm1600_plant5', type: 'plant', x: 1380, y: 80, width: 40, height: 48, isOccupied: false }
     ],
     bosses: [
       {
-        id: 'boss_mentor_qa',
-        name: 'Anh Long QA Lead',
-        role: 'Trùm Soi Bug Văn Phòng',
-        x: 480,
-        y: 220,
+        id: 'boss_it_tuan',
+        name: 'Sếp IT Tuấn Bug',
+        role: 'Quản Lý Mạng IT Văn Phòng',
+        x: 370,
+        y: 120,
         width: 44,
         height: 44,
-        speed: 1.6,
+        speed: 1.8,
         facingAngle: 0,
         state: 'patrol',
         patrolPoints: [
-          { x: 180, y: 100 },
-          { x: 350, y: 100 },
-          { x: 350, y: 220 },
-          { x: 620, y: 220 },
-          { x: 620, y: 380 },
-          { x: 350, y: 380 },
-          { x: 180, y: 480 },
-          { x: 500, y: 520 },
-          { x: 820, y: 380 },
-          { x: 820, y: 120 }
+          { x: 370, y: 120 },
+          { x: 370, y: 780 },
+          { x: 790, y: 780 },
+          { x: 790, y: 120 },
+          { x: 1150, y: 120 },
+          { x: 1150, y: 780 }
         ],
         currentPointIndex: 0,
         investigateTimer: 0,
-        fieldOfView: Math.PI * 0.4,
-        visionDistance: 190,
+        fieldOfView: Math.PI * 0.45,
+        visionDistance: 210,
         alertLevel: 0,
         skin: 'boss_male'
+      },
+      {
+        id: 'boss_ceo_hoang',
+        name: 'Sếp Tổng Hoàng VIP',
+        role: 'Tổng Giám Đốc Điều Hành',
+        x: 1210,
+        y: 120,
+        width: 44,
+        height: 44,
+        speed: 2.0,
+        facingAngle: Math.PI / 2,
+        state: 'patrol',
+        patrolPoints: [
+          { x: 1210, y: 120 },
+          { x: 1210, y: 780 },
+          { x: 1390, y: 780 },
+          { x: 1390, y: 120 }
+        ],
+        currentPointIndex: 0,
+        investigateTimer: 0,
+        fieldOfView: Math.PI * 0.45,
+        visionDistance: 220,
+        alertLevel: 0,
+        skin: 'boss_female'
       }
     ],
-    cameras: [],
+    cameras: [
+      {
+        id: 'cam_exec',
+        x: 1180,
+        y: 80,
+        baseAngle: Math.PI / 4,
+        sweepAngle: Math.PI / 2,
+        currentAngle: Math.PI / 4,
+        rotationSpeed: 0.015,
+        sweepDir: 1,
+        visionDistance: 200,
+        fieldOfView: Math.PI * 0.35,
+        isActive: true
+      }
+    ],
     collectibles: [
-      { id: 'f5_card', type: 'card', name: 'Thẻ Chấm Công Tầng 5', x: 820, y: 120, isCollected: false, requiredForExit: true },
-      { id: 'f5_bag', type: 'backpack', name: 'Ba Lô Laptop', x: 140, y: 440, isCollected: false, requiredForExit: true },
-      { id: 'f5_boba', type: 'boba', name: 'Trà Sữa Full Topping', x: 480, y: 520, isCollected: false, value: 40 },
-      { id: 'f5_cash', type: 'bonus_cash', name: 'Tiền Thưởng Thử Việc', x: 820, y: 440, isCollected: false, value: 50 },
-      { id: 'f5_paper', type: 'paper_distraction', name: 'Cốc Ném Lạc Hướng', x: 320, y: 80, isCollected: false }
+      { id: 'm1600_card', type: 'card', name: 'Thẻ Chấm Công VIP Giám Đốc', x: 1370, y: 180, isCollected: false, requiredForExit: true },
+      { id: 'm1600_bag', type: 'backpack', name: 'Ba Lô Laptop Chống Nước', x: 200, y: 120, isCollected: false, requiredForExit: true },
+      { id: 'm1600_boba', type: 'boba', name: 'Trà Sữa Hoàng Gia', x: 790, y: 220, isCollected: false, value: 50 },
+      { id: 'm1600_cash1', type: 'bonus_cash', name: 'Tiền Thưởng KPI Tầng 1600', x: 1150, y: 460, isCollected: false, value: 100 },
+      { id: 'm1600_paper1', type: 'paper_distraction', name: 'Cốc Giấy Đánh Lạc Hướng', x: 370, y: 400, isCollected: false }
     ]
   },
 
