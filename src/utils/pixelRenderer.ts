@@ -953,18 +953,27 @@ export function drawBossChibi(
   const isChasing = boss.state === 'chase' || boss.state === 'rage';
   const isSuspicious = boss.state === 'investigate';
 
+  const isFacingAway = boss.facingAngle < -Math.PI * 0.22 && boss.facingAngle > -Math.PI * 0.78;
+  const isFacingLeft = Math.cos(boss.facingAngle) < 0;
+
   ctx.translate(bx, by - bounce);
 
   // Floor shadow
-  ctx.fillStyle = 'rgba(0, 0, 0, 0.35)';
+  ctx.fillStyle = 'rgba(0, 0, 0, 0.28)';
   ctx.beginPath();
   ctx.ellipse(0, boss.height / 2 + bounce - 2, 14, 6, 0, 0, Math.PI * 2);
   ctx.fill();
 
-  // Character facing angles
-  // pointing up is approximately -Math.PI / 2 (-1.57 rad)
-  const isFacingAway = boss.facingAngle < -Math.PI * 0.22 && boss.facingAngle > -Math.PI * 0.78;
-  const isFacingLeft = Math.cos(boss.facingAngle) < 0;
+  // Running Dust & Wind Streaks ("Đi nhanh" - IMG_2631.png)
+  if (boss.state === 'chase' && isMoving) {
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.6)';
+    const streakOffset = (frame * 3.5) % 18;
+    const dirFactor = isFacingLeft ? 1 : -1;
+    // Top wind line
+    ctx.fillRect(dirFactor * (12 + streakOffset), boss.height / 2 - 2, 9, 1.5);
+    // Bottom wind line
+    ctx.fillRect(dirFactor * (6 + ((streakOffset + 9) % 18)), boss.height / 2 + 2, 6, 1);
+  }
 
   // Running Lean Animation ("Đi nhanh"): sếp leans forward in running direction
   if (boss.state === 'chase' && isMoving) {
@@ -1058,19 +1067,64 @@ export function drawBossChibi(
     }
   }
 
-  // --- Portfolio Briefcase (Sếp's holding case in hand) ---
-  // Drawn on the side of the body, swings naturally with motion
-  ctx.save();
-  const briefcaseSide = isFacingLeft ? 7 : -14;
-  ctx.translate(briefcaseSide, 1);
-  ctx.fillStyle = '#4b5563'; // Slate portfolio body
-  ctx.fillRect(0, 0, 7, 10);
-  ctx.fillStyle = '#374151'; // Dark leather trim
-  ctx.fillRect(-1, 2, 9, 2);
-  ctx.strokeStyle = '#9ca3af'; // Silver handles
-  ctx.lineWidth = 1;
-  ctx.strokeRect(2, -2, 3, 2);
-  ctx.restore();
+  // --- Dynamic Hand-held Items based on 10 custom Boss States ---
+  if (boss.skin === 'boss_male' && !isFacingAway) {
+    const handSide = isFacingLeft ? -13 : 9;
+
+    if (isChasing) {
+      // --- ANGRY OT REPORT / CLIPBOARD ("Bực tức" - IMG_2620.png) ---
+      ctx.save();
+      ctx.translate(handSide, -1);
+      // Clipboard wooden board
+      ctx.fillStyle = '#7c2d12';
+      ctx.fillRect(0, 0, 9, 13);
+      // White paper sheets
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(1, 2, 7, 10);
+      // Scribbled lines representing KPI report
+      ctx.fillStyle = '#3b82f6';
+      ctx.fillRect(2, 4, 5, 1);
+      ctx.fillStyle = '#ef4444'; // red title line
+      ctx.fillRect(2, 6, 4, 1);
+      ctx.fillStyle = '#3b82f6';
+      ctx.fillRect(2, 8, 5, 1);
+      ctx.restore();
+
+    } else if (isSuspicious) {
+      // --- FLASHLIGHT SCANNER ("Đi kiểm tra" - IMG_2628.png) ---
+      ctx.save();
+      ctx.translate(handSide, 3);
+      // Flashlight body
+      ctx.fillStyle = '#6b7280';
+      ctx.fillRect(0, 0, 8, 3.5);
+      ctx.fillStyle = '#facc15'; // golden lens head
+      const lensX = isFacingLeft ? -2 : 7;
+      ctx.fillRect(lensX, -1, 3, 5.5);
+      ctx.restore();
+
+    } else {
+      // --- DEFAULT BRIEFCASE ("Đi thường" / "Đứng" - IMG_2623.png) ---
+      ctx.save();
+      const briefcaseSide = isFacingLeft ? 7 : -14;
+      ctx.translate(briefcaseSide, 1);
+      ctx.fillStyle = '#4b5563'; // Slate portfolio body
+      ctx.fillRect(0, 0, 7, 10);
+      ctx.fillStyle = '#374151'; // Dark leather trim
+      ctx.fillRect(-1, 2, 9, 2);
+      ctx.strokeStyle = '#9ca3af'; // Silver handles
+      ctx.lineWidth = 1;
+      ctx.strokeRect(2, -2, 3, 2);
+      ctx.restore();
+    }
+  } else if (boss.skin !== 'boss_male') {
+    // Other characters (guard/HR) default briefcase
+    ctx.save();
+    const briefcaseSide = isFacingLeft ? 7 : -14;
+    ctx.translate(briefcaseSide, 1);
+    ctx.fillStyle = '#4b5563';
+    ctx.fillRect(0, 0, 7, 10);
+    ctx.restore();
+  }
 
   // --- Big Cute Chibi Head ---
   const headY = -20;
