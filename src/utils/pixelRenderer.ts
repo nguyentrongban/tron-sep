@@ -16,21 +16,36 @@ cachedOfficeMapImg.onload = () => {
   isOfficeMapImgLoaded = true;
 };
 
-// Preload Boss Sprite Images from Server
+// Preload Boss Sprite Images from Server with custom user PNG override fallback
 const cachedBossNormal = new Image();
-cachedBossNormal.src = bossNormalAsset;
+cachedBossNormal.src = '/src/assets/images/boss_normal.png';
+cachedBossNormal.onerror = () => {
+  cachedBossNormal.src = bossNormalAsset;
+};
 
 const cachedBossFast = new Image();
-cachedBossFast.src = bossFastAsset;
+cachedBossFast.src = '/src/assets/images/boss_fast.png';
+cachedBossFast.onerror = () => {
+  cachedBossFast.src = bossFastAsset;
+};
 
 const cachedBossScan = new Image();
-cachedBossScan.src = bossScanAsset;
+cachedBossScan.src = '/src/assets/images/boss_scan.png';
+cachedBossScan.onerror = () => {
+  cachedBossScan.src = bossScanAsset;
+};
 
 const cachedBossAngry = new Image();
-cachedBossAngry.src = bossAngryAsset;
+cachedBossAngry.src = '/src/assets/images/boss_angry.png';
+cachedBossAngry.onerror = () => {
+  cachedBossAngry.src = bossAngryAsset;
+};
 
 const cachedBossBack = new Image();
-cachedBossBack.src = bossBackAsset;
+cachedBossBack.src = '/src/assets/images/boss_back.png';
+cachedBossBack.onerror = () => {
+  cachedBossBack.src = bossBackAsset;
+};
 
 // Check if a line segment intersects another line segment
 export function getLineIntersection(
