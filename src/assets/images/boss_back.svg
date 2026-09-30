@@ -1,0 +1,39 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="64" height="64" shape-rendering="crispEdges">
+  <!-- Sếp Back/Turning View State ("Đi về" / "Quay đầu") -->
+  
+  <!-- Shadow under character -->
+  <ellipse cx="16" cy="30" rx="11" ry="2" fill="rgba(0, 0, 0, 0.25)" />
+
+  <!-- Back Hair (Fully covers the face when looking away) -->
+  <rect x="7" y="5" width="18" height="13" fill="#1e111a" />
+  <rect x="6" y="9" width="20" height="8" fill="#1e111a" />
+  <rect x="5" y="10" width="1" height="2" fill="#1e111a" /> <!-- Ears covered by hair from back -->
+  <rect x="26" y="10" width="1" height="2" fill="#1e111a" />
+
+  <!-- Front Combed Volume Hair (Rendered as back hair crown) -->
+  <rect x="8" y="3" width="16" height="3" fill="#1e111a" />
+  <rect x="9" y="2" width="14" height="1" fill="#2d1e29" /> <!-- Hair volume top highlight -->
+  
+  <!-- Neat combed hair strand lines visible from back -->
+  <rect x="11" y="6" width="10" height="1" fill="#2d1e29" />
+  <rect x="9" y="10" width="14" height="1" fill="#2d1e29" />
+  <rect x="8" y="13" width="16" height="4" fill="#1e111a" /> <!-- Neck area hair coverage -->
+
+  <!-- Torso: Navy Blue Corporate Suit (Back View - No collar/tie or badge!) -->
+  <rect x="9" y="17" width="14" height="8" fill="#1e243b" />
+  <rect x="8" y="18" width="1" height="6" fill="#151a2d" /> <!-- Left shoulder shadow -->
+  <rect x="23" y="18" width="1" height="6" fill="#151a2d" /> <!-- Right shoulder shadow -->
+
+  <!-- Dark Trousers -->
+  <rect x="10" y="25" width="12" height="4" fill="#111827" />
+
+  <!-- Shiny Black Leather Shoes -->
+  <rect x="9" y="29" width="5" height="1.5" fill="#020617" />
+  <rect x="18" y="29" width="5" height="1.5" fill="#020617" />
+
+  <!-- Briefcase on right side from back view -->
+  <rect x="5" y="19" width="4" height="6" fill="#4b5563" />
+  <rect x="4" y="21" width="6" height="2" fill="#374151" />
+  <rect x="6" y="17" width="2" height="2" fill="#9ca3af" />
+  <rect x="7" y="18" width="1" height="1" fill="#4b5563" />
+</svg>

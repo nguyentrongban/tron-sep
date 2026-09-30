@@ -1,6 +1,13 @@
 import { Player, Boss, SecurityCamera, HidingSpot, ItemCollectible, WallObstacle, NoiseDistraction, ParticleEffect } from '../types/game';
 import mapBgAsset from '../assets/images/pixel_office_map_1600x896_1790746436914.jpg';
 
+// Import Boss SVG image assets from server
+import bossNormalAsset from '../assets/images/boss_normal.svg';
+import bossFastAsset from '../assets/images/boss_fast.svg';
+import bossScanAsset from '../assets/images/boss_scan.svg';
+import bossAngryAsset from '../assets/images/boss_angry.svg';
+import bossBackAsset from '../assets/images/boss_back.svg';
+
 // Preload Map Image
 const cachedOfficeMapImg = new Image();
 cachedOfficeMapImg.src = mapBgAsset;
@@ -8,6 +15,22 @@ let isOfficeMapImgLoaded = false;
 cachedOfficeMapImg.onload = () => {
   isOfficeMapImgLoaded = true;
 };
+
+// Preload Boss Sprite Images from Server
+const cachedBossNormal = new Image();
+cachedBossNormal.src = bossNormalAsset;
+
+const cachedBossFast = new Image();
+cachedBossFast.src = bossFastAsset;
+
+const cachedBossScan = new Image();
+cachedBossScan.src = bossScanAsset;
+
+const cachedBossAngry = new Image();
+cachedBossAngry.src = bossAngryAsset;
+
+const cachedBossBack = new Image();
+cachedBossBack.src = bossBackAsset;
 
 // Check if a line segment intersects another line segment
 export function getLineIntersection(
@@ -956,6 +979,8 @@ export function drawBossChibi(
   const isFacingAway = boss.facingAngle < -Math.PI * 0.22 && boss.facingAngle > -Math.PI * 0.78;
   const isFacingLeft = Math.cos(boss.facingAngle) < 0;
 
+  const headY = -20;
+
   ctx.translate(bx, by - bounce);
 
   // Floor shadow
@@ -964,159 +989,90 @@ export function drawBossChibi(
   ctx.ellipse(0, boss.height / 2 + bounce - 2, 14, 6, 0, 0, Math.PI * 2);
   ctx.fill();
 
-  // Running Dust & Wind Streaks ("Đi nhanh" - IMG_2631.png)
-  if (boss.state === 'chase' && isMoving) {
-    ctx.fillStyle = 'rgba(255, 255, 255, 0.6)';
-    const streakOffset = (frame * 3.5) % 18;
-    const dirFactor = isFacingLeft ? 1 : -1;
-    // Top wind line
-    ctx.fillRect(dirFactor * (12 + streakOffset), boss.height / 2 - 2, 9, 1.5);
-    // Bottom wind line
-    ctx.fillRect(dirFactor * (6 + ((streakOffset + 9) % 18)), boss.height / 2 + 2, 6, 1);
-  }
-
-  // Running Lean Animation ("Đi nhanh"): sếp leans forward in running direction
-  if (boss.state === 'chase' && isMoving) {
-    const leanAngle = 0.12 * (isFacingLeft ? -1 : 1);
-    ctx.rotate(leanAngle);
-  }
-
-  // --- Boss Legs & Shiny Shoes ---
-  ctx.fillStyle = boss.skin === 'guard' ? '#1e3a8a' : '#111827'; // trousers
-  // Left leg
-  ctx.fillRect(-8, 9 + legSwing, 5, 10);
-  // Right leg
-  ctx.fillRect(2, 9 - legSwing, 5, 10);
-  // Shiny leather shoes
-  ctx.fillStyle = '#020617';
-  ctx.fillRect(-9, 17 + legSwing, 7, 3);
-  ctx.fillRect(1, 17 - legSwing, 7, 3);
-
-  // --- Boss Torso (Suit / Uniform / Lanyard) ---
+  // Draw actual imported image assets for boss_male directly from the server!
   if (boss.skin === 'boss_male') {
-    // Sharp Navy Blue/Dark Suit ("Sếp")
-    ctx.fillStyle = '#1e243b';
-    ctx.beginPath();
-    ctx.roundRect(-12, -4, 24, 15, 3);
-    ctx.fill();
-
-    if (!isFacingAway) {
-      // White shirt collar peeking out
-      ctx.fillStyle = '#ffffff';
-      ctx.beginPath();
-      ctx.moveTo(-4, -4);
-      ctx.lineTo(4, -4);
-      ctx.lineTo(0, 3);
-      ctx.closePath();
-      ctx.fill();
-
-      // Sharp Red Tie
-      ctx.fillStyle = '#dc2626';
-      ctx.beginPath();
-      ctx.moveTo(-2, -3);
-      ctx.lineTo(2, -3);
-      ctx.lineTo(3, 4);
-      ctx.lineTo(0, 8);
-      ctx.lineTo(-3, 4);
-      ctx.closePath();
-      ctx.fill();
-
-      // Corporate Blue ID Lanyard & Badge
-      ctx.strokeStyle = '#3b82f6';
-      ctx.lineWidth = 1;
-      ctx.beginPath();
-      ctx.arc(0, -4, 5, 0, Math.PI);
-      ctx.stroke();
-      // ID Badge dangling
-      ctx.fillStyle = '#ffffff';
-      ctx.fillRect(-3, 2, 6, 7);
-      ctx.fillStyle = '#3b82f6';
-      ctx.fillRect(-3, 2, 6, 2); // Blue top banner of company badge
-    }
-  } else if (boss.skin === 'boss_female') {
-    ctx.fillStyle = '#701a75'; // Maroon Blazer
-    ctx.beginPath();
-    ctx.roundRect(-12, -4, 24, 15, 3);
-    ctx.fill();
-    if (!isFacingAway) {
-      ctx.fillStyle = '#facc15'; // Gold brooch
-      ctx.beginPath();
-      ctx.arc(5, 0, 2.5, 0, Math.PI * 2);
-      ctx.fill();
-    }
-  } else if (boss.skin === 'hr_snitch') {
-    ctx.fillStyle = '#0d9488'; // HR Blouse
-    ctx.beginPath();
-    ctx.roundRect(-11, -4, 22, 14, 3);
-    ctx.fill();
-    if (!isFacingAway) {
-      ctx.fillStyle = '#f8fafc'; // ID Badge
-      ctx.fillRect(-3, 3, 6, 7);
-      ctx.fillStyle = '#ef4444';
-      ctx.fillRect(-3, 3, 6, 2);
-    }
-  } else if (boss.skin === 'guard') {
-    ctx.fillStyle = '#1d4ed8'; // Blue Uniform
-    ctx.beginPath();
-    ctx.roundRect(-12, -4, 24, 15, 3);
-    ctx.fill();
-    if (!isFacingAway) {
-      ctx.fillStyle = '#facc15'; // Shoulder pads
-      ctx.fillRect(-13, -4, 3, 2);
-      ctx.fillRect(10, -4, 3, 2);
-    }
-  }
-
-  // --- Dynamic Hand-held Items based on 10 custom Boss States ---
-  if (boss.skin === 'boss_male' && !isFacingAway) {
-    const handSide = isFacingLeft ? -13 : 9;
-
-    if (isChasing) {
-      // --- ANGRY OT REPORT / CLIPBOARD ("Bực tức" - IMG_2620.png) ---
-      ctx.save();
-      ctx.translate(handSide, -1);
-      // Clipboard wooden board
-      ctx.fillStyle = '#7c2d12';
-      ctx.fillRect(0, 0, 9, 13);
-      // White paper sheets
-      ctx.fillStyle = '#ffffff';
-      ctx.fillRect(1, 2, 7, 10);
-      // Scribbled lines representing KPI report
-      ctx.fillStyle = '#3b82f6';
-      ctx.fillRect(2, 4, 5, 1);
-      ctx.fillStyle = '#ef4444'; // red title line
-      ctx.fillRect(2, 6, 4, 1);
-      ctx.fillStyle = '#3b82f6';
-      ctx.fillRect(2, 8, 5, 1);
-      ctx.restore();
-
+    let imgToDraw = cachedBossNormal;
+    if (isFacingAway) {
+      imgToDraw = cachedBossBack;
+    } else if (isChasing) {
+      imgToDraw = cachedBossFast;
     } else if (isSuspicious) {
-      // --- FLASHLIGHT SCANNER ("Đi kiểm tra" - IMG_2628.png) ---
-      ctx.save();
-      ctx.translate(handSide, 3);
-      // Flashlight body
-      ctx.fillStyle = '#6b7280';
-      ctx.fillRect(0, 0, 8, 3.5);
-      ctx.fillStyle = '#facc15'; // golden lens head
-      const lensX = isFacingLeft ? -2 : 7;
-      ctx.fillRect(lensX, -1, 3, 5.5);
-      ctx.restore();
-
-    } else {
-      // --- DEFAULT BRIEFCASE ("Đi thường" / "Đứng" - IMG_2623.png) ---
-      ctx.save();
-      const briefcaseSide = isFacingLeft ? 7 : -14;
-      ctx.translate(briefcaseSide, 1);
-      ctx.fillStyle = '#4b5563'; // Slate portfolio body
-      ctx.fillRect(0, 0, 7, 10);
-      ctx.fillStyle = '#374151'; // Dark leather trim
-      ctx.fillRect(-1, 2, 9, 2);
-      ctx.strokeStyle = '#9ca3af'; // Silver handles
-      ctx.lineWidth = 1;
-      ctx.strokeRect(2, -2, 3, 2);
-      ctx.restore();
+      imgToDraw = cachedBossScan;
+    } else if (boss.patrolWaitTimer && boss.patrolWaitTimer > 0) {
+      imgToDraw = cachedBossAngry;
     }
-  } else if (boss.skin !== 'boss_male') {
+
+    ctx.save();
+    if (isFacingLeft) {
+      ctx.scale(-1, 1);
+    }
+    // Draw the actual image file nicely centered
+    ctx.drawImage(imgToDraw, -24, -26, 48, 48);
+    ctx.restore();
+  } else {
+    // Running Dust & Wind Streaks ("Đi nhanh" - IMG_2631.png)
+    if (boss.state === 'chase' && isMoving) {
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.6)';
+      const streakOffset = (frame * 3.5) % 18;
+      const dirFactor = isFacingLeft ? 1 : -1;
+      // Top wind line
+      ctx.fillRect(dirFactor * (12 + streakOffset), boss.height / 2 - 2, 9, 1.5);
+      // Bottom wind line
+      ctx.fillRect(dirFactor * (6 + ((streakOffset + 9) % 18)), boss.height / 2 + 2, 6, 1);
+    }
+
+    // Running Lean Animation ("Đi nhanh"): sếp leans forward in running direction
+    if (boss.state === 'chase' && isMoving) {
+      const leanAngle = 0.12 * (isFacingLeft ? -1 : 1);
+      ctx.rotate(leanAngle);
+    }
+
+    // --- Boss Legs & Shiny Shoes ---
+    ctx.fillStyle = boss.skin === 'guard' ? '#1e3a8a' : '#111827'; // trousers
+    // Left leg
+    ctx.fillRect(-8, 9 + legSwing, 5, 10);
+    // Right leg
+    ctx.fillRect(2, 9 - legSwing, 5, 10);
+    // Shiny leather shoes
+    ctx.fillStyle = '#020617';
+    ctx.fillRect(-9, 17 + legSwing, 7, 3);
+    ctx.fillRect(1, 17 - legSwing, 7, 3);
+
+    // --- Boss Torso (Suit / Uniform / Lanyard) ---
+    if (boss.skin === 'boss_female') {
+      ctx.fillStyle = '#701a75'; // Maroon Blazer
+      ctx.beginPath();
+      ctx.roundRect(-12, -4, 24, 15, 3);
+      ctx.fill();
+      if (!isFacingAway) {
+        ctx.fillStyle = '#facc15'; // Gold brooch
+        ctx.beginPath();
+        ctx.arc(5, 0, 2.5, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    } else if (boss.skin === 'hr_snitch') {
+      ctx.fillStyle = '#0d9488'; // HR Blouse
+      ctx.beginPath();
+      ctx.roundRect(-11, -4, 22, 14, 3);
+      ctx.fill();
+      if (!isFacingAway) {
+        ctx.fillStyle = '#f8fafc'; // ID Badge
+        ctx.fillRect(-3, 3, 6, 7);
+        ctx.fillStyle = '#ef4444';
+        ctx.fillRect(-3, 3, 6, 2);
+      }
+    } else if (boss.skin === 'guard') {
+      ctx.fillStyle = '#1d4ed8'; // Blue Uniform
+      ctx.beginPath();
+      ctx.roundRect(-12, -4, 24, 15, 3);
+      ctx.fill();
+      if (!isFacingAway) {
+        ctx.fillStyle = '#facc15'; // Shoulder pads
+        ctx.fillRect(-13, -4, 3, 2);
+        ctx.fillRect(10, -4, 3, 2);
+      }
+    }
+
     // Other characters (guard/HR) default briefcase
     ctx.save();
     const briefcaseSide = isFacingLeft ? 7 : -14;
@@ -1124,213 +1080,155 @@ export function drawBossChibi(
     ctx.fillStyle = '#4b5563';
     ctx.fillRect(0, 0, 7, 10);
     ctx.restore();
-  }
 
-  // --- Big Cute Chibi Head ---
-  const headY = -20;
-  
-  // Skin tone
-  ctx.fillStyle = '#fed7aa'; // Elegant peach-pale skin tone
-  ctx.beginPath();
-  ctx.roundRect(-14, headY, 28, 20, 8);
-  ctx.fill();
-
-  // Rosy cheeks blush
-  if (!isFacingAway) {
-    ctx.fillStyle = 'rgba(244, 63, 94, 0.35)';
-    ctx.beginPath();
-    ctx.ellipse(-9, headY + 12, 3, 2, 0, 0, Math.PI * 2);
-    ctx.ellipse(9, headY + 12, 3, 2, 0, 0, Math.PI * 2);
-    ctx.fill();
-  }
-
-  // Combed Hair / Cap
-  if (boss.skin === 'guard') {
-    // Security Cap
-    ctx.fillStyle = '#1e3a8a';
-    ctx.fillRect(-15, headY - 4, 30, 8);
-    ctx.fillStyle = '#0f172a';
-    ctx.fillRect(-16, headY + 1, 32, 3);
-    ctx.fillStyle = '#facc15';
-    ctx.beginPath();
-    ctx.arc(0, headY - 1, 3, 0, Math.PI * 2);
-    ctx.fill();
-  } else if (boss.skin === 'boss_female') {
-    ctx.fillStyle = '#451a03'; // Sharp Female Hair
-    ctx.beginPath();
-    ctx.roundRect(-15, headY - 5, 30, 12, 6);
-    ctx.fill();
-  } else {
-    // --- EXACT CHIBI SẾP COMBED HAIR ("Sếp" Volume Hair Style) ---
-    // Combed dark-slate brown volume hair with side-swept sideburns and locks
-    const hairColor = '#1e111a'; // Deepest dark brown-black combed hair
-    const hairHighlight = '#2d1e29'; // Slick highlight
-    
-    ctx.fillStyle = hairColor;
-    
-    // 1. Back/Top Volume hair base
-    ctx.beginPath();
-    ctx.roundRect(-15, headY - 7, 30, 14, 8);
-    ctx.fill();
-
-    // 2. High-volume side sweep combed crown
-    ctx.beginPath();
-    ctx.ellipse(0, headY - 4, 14, 7, -0.05, 0, Math.PI * 2);
-    ctx.fill();
-
-    // 3. Side sweeps & sideburns lock
-    ctx.fillRect(-15, headY, 3, 10);
-    ctx.fillRect(12, headY, 3, 10);
-
-    // 4. Slick hair highlights
-    ctx.fillStyle = hairHighlight;
-    ctx.fillRect(-11, headY - 5, 22, 2);
-    ctx.fillRect(-6, headY - 3, 12, 2);
-  }
-
-  // --- Eyes, Expressions & Combed Glasses ---
-  if (!isFacingAway) {
-    const isPausing = boss.patrolWaitTimer && boss.patrolWaitTimer > 0;
-
-    const lookDir = Math.cos(boss.facingAngle);
-    const eyeOffset = Math.sign(lookDir) * 1.5;
-
-    if (boss.skin === 'boss_male') {
-      // Draw Square comby glasses frame
-      ctx.strokeStyle = '#000000'; // Thick black designer frames
-      ctx.lineWidth = 1.8;
-      ctx.strokeRect(-9 + eyeOffset, headY + 5, 7, 7);
-      ctx.strokeRect(2 + eyeOffset, headY + 5, 7, 7);
-      // Bridge
-      ctx.beginPath();
-      ctx.moveTo(-2 + eyeOffset, headY + 8);
-      ctx.lineTo(2 + eyeOffset, headY + 8);
-      ctx.stroke();
-
-      // Glasses reflection glint
-      ctx.strokeStyle = 'rgba(255, 255, 255, 0.45)';
-      ctx.lineWidth = 1;
-      ctx.beginPath();
-      ctx.moveTo(-8 + eyeOffset, headY + 10); ctx.lineTo(-6 + eyeOffset, headY + 7);
-      ctx.moveTo(3 + eyeOffset, headY + 10); ctx.lineTo(5 + eyeOffset, headY + 7);
-      ctx.stroke();
-    }
-
-    // Expressions
-    if (isChasing) {
-      // --- ANGRY EXPRESSION ("Tức giận" / "Phát hiện") ---
-      // Angry glowing crimson eyes
-      ctx.fillStyle = '#ef4444';
-      ctx.fillRect(-7 + eyeOffset, headY + 7, 3, 4);
-      ctx.fillRect(4 + eyeOffset, headY + 7, 3, 4);
-
-      // Shouting red mouth
-      ctx.fillStyle = '#000000';
-      ctx.beginPath();
-      ctx.ellipse(0, headY + 15, 4, 3, 0, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.fillStyle = '#ef4444';
-      ctx.fillRect(-2, headY + 14, 4, 2);
-
-      // Red anger vein cross marks (forehead popping)
-      ctx.save();
-      ctx.translate(13, headY - 1);
-      ctx.strokeStyle = '#dc2626';
-      ctx.lineWidth = 1.8;
-      ctx.beginPath();
-      // Tick-tack vein ticks
-      ctx.moveTo(-4, -4); ctx.lineTo(4, 4);
-      ctx.moveTo(4, -4); ctx.lineTo(-4, 4);
-      ctx.stroke();
-      ctx.restore();
-
-      // Steam puffs blowing out from anger
-      if (frame % 16 < 8) {
-        ctx.fillStyle = 'rgba(255, 255, 255, 0.65)';
-        ctx.beginPath();
-        ctx.arc(-18, headY + 6, 2.5, 0, Math.PI * 2);
-        ctx.arc(18, headY + 6, 2.5, 0, Math.PI * 2);
-        ctx.fill();
-      }
-
-    } else if (isSuspicious) {
-      // --- SUSPICIOUS / SCANNING EXPRESSION ("Nghi ngờ" / "Đi kiểm tra") ---
-      // Squinting sideways looking eyes
-      ctx.fillStyle = '#111827';
-      ctx.fillRect(-6 + Math.sign(lookDir) * 2, headY + 8, 2, 2);
-      ctx.fillRect(4 + Math.sign(lookDir) * 2, headY + 8, 2, 2);
-
-      // Raised curious eyebrow
-      ctx.strokeStyle = '#000000';
-      ctx.lineWidth = 1.5;
-      ctx.beginPath();
-      ctx.moveTo(-8, headY + 3); ctx.lineTo(-4, headY + 3);
-      ctx.moveTo(3, headY + 4); ctx.lineTo(7, headY + 4);
-      ctx.stroke();
-
-    } else if (isPausing && frame % 120 < 60) {
-      // --- TIRED/LAZY COFFEE BREAK ("Mệt mỏi") ---
-      // Sleeping curve eyes
-      ctx.strokeStyle = '#1f2937';
-      ctx.lineWidth = 1.5;
-      ctx.beginPath();
-      ctx.arc(-5 + eyeOffset, headY + 8, 2.5, 0, Math.PI, true);
-      ctx.arc(5 + eyeOffset, headY + 8, 2.5, 0, Math.PI, true);
-      ctx.stroke();
-
-      // Blue sweat droplet on forehead
-      ctx.fillStyle = '#38bdf8';
-      ctx.beginPath();
-      ctx.moveTo(11, headY + 1);
-      ctx.lineTo(13, headY + 4);
-      ctx.lineTo(9, headY + 4);
-      ctx.closePath();
-      ctx.fill();
-      ctx.beginPath();
-      ctx.arc(11, headY + 4, 2, 0, Math.PI * 2);
-      ctx.fill();
-
-    } else if (isPausing && frame % 120 >= 60) {
-      // --- SATISFIED COFFEE CORNER ("Hài lòng" / "Bình thường") ---
-      // Smiley closed curve eyes
-      ctx.strokeStyle = '#111827';
-      ctx.lineWidth = 1.5;
-      ctx.beginPath();
-      ctx.arc(-5, headY + 10, 2.5, 0, Math.PI, true);
-      ctx.arc(5, headY + 10, 2.5, 0, Math.PI, true);
-      ctx.stroke();
-
-      // Small satisfied smile
-      ctx.beginPath();
-      ctx.arc(0, headY + 14, 2, 0, Math.PI);
-      ctx.stroke();
-
-      // Sparkly stars next to crown
-      if (frame % 20 < 10) {
-        ctx.fillStyle = '#facc15';
-        ctx.fillText('✨', 14, headY + 4);
-      }
-    } else {
-      // --- NORMAL/STERN PATROL ("Bình thường") ---
-      ctx.fillStyle = '#111827';
-      ctx.fillRect(-7 + eyeOffset, headY + 7, 3, 5);
-      ctx.fillRect(4 + eyeOffset, headY + 7, 3, 5);
-      
-      // Stern straight mouth
-      ctx.fillStyle = '#111827';
-      ctx.fillRect(-3, headY + 15, 6, 1.5);
-    }
-  } else {
-    // --- TURNING HEAD BACK ("Quay đầu" / "Đi về") ---
-    // The back of combed volume hair completely covers the face!
-    const hairColor = '#1e111a';
-    ctx.fillStyle = hairColor;
+    // Skin tone
+    ctx.fillStyle = '#fed7aa'; // Elegant peach-pale skin tone
     ctx.beginPath();
     ctx.roundRect(-14, headY, 28, 20, 8);
     ctx.fill();
 
-    // Additional combed strands at the neck base
-    ctx.fillRect(-12, headY + 12, 24, 7);
+    // Rosy cheeks blush
+    if (!isFacingAway) {
+      ctx.fillStyle = 'rgba(244, 63, 94, 0.35)';
+      ctx.beginPath();
+      ctx.ellipse(-9, headY + 12, 3, 2, 0, 0, Math.PI * 2);
+      ctx.ellipse(9, headY + 12, 3, 2, 0, 0, Math.PI * 2);
+      ctx.fill();
+    }
+
+    // Combed Hair / Cap
+    if (boss.skin === 'guard') {
+      // Security Cap
+      ctx.fillStyle = '#1e3a8a';
+      ctx.fillRect(-15, headY - 4, 30, 8);
+      ctx.fillStyle = '#0f172a';
+      ctx.fillRect(-16, headY + 1, 32, 3);
+      ctx.fillStyle = '#facc15';
+      ctx.beginPath();
+      ctx.arc(0, headY - 1, 3, 0, Math.PI * 2);
+      ctx.fill();
+    } else if (boss.skin === 'boss_female') {
+      ctx.fillStyle = '#451a03'; // Sharp Female Hair
+      ctx.beginPath();
+      ctx.roundRect(-15, headY - 5, 30, 12, 6);
+      ctx.fill();
+    }
+
+    // --- Eyes, Expressions ---
+    if (!isFacingAway) {
+      const isPausing = boss.patrolWaitTimer && boss.patrolWaitTimer > 0;
+      const lookDir = Math.cos(boss.facingAngle);
+      const eyeOffset = Math.sign(lookDir) * 1.5;
+
+      // Expressions
+      if (isChasing) {
+        // Angry glowing crimson eyes
+        ctx.fillStyle = '#ef4444';
+        ctx.fillRect(-7 + eyeOffset, headY + 7, 3, 4);
+        ctx.fillRect(4 + eyeOffset, headY + 7, 3, 4);
+
+        // Shouting red mouth
+        ctx.fillStyle = '#000000';
+        ctx.beginPath();
+        ctx.ellipse(0, headY + 15, 4, 3, 0, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = '#ef4444';
+        ctx.fillRect(-2, headY + 14, 4, 2);
+
+        // Red anger vein cross marks (forehead popping)
+        ctx.save();
+        ctx.translate(13, headY - 1);
+        ctx.strokeStyle = '#dc2626';
+        ctx.lineWidth = 1.8;
+        ctx.beginPath();
+        ctx.moveTo(-4, -4); ctx.lineTo(4, 4);
+        ctx.moveTo(4, -4); ctx.lineTo(-4, 4);
+        ctx.stroke();
+        ctx.restore();
+
+        // Steam puffs blowing out from anger
+        if (frame % 16 < 8) {
+          ctx.fillStyle = 'rgba(255, 255, 255, 0.65)';
+          ctx.beginPath();
+          ctx.arc(-18, headY + 6, 2.5, 0, Math.PI * 2);
+          ctx.arc(18, headY + 6, 2.5, 0, Math.PI * 2);
+          ctx.fill();
+        }
+
+      } else if (isSuspicious) {
+        // Squinting sideways looking eyes
+        ctx.fillStyle = '#111827';
+        ctx.fillRect(-6 + Math.sign(lookDir) * 2, headY + 8, 2, 2);
+        ctx.fillRect(4 + Math.sign(lookDir) * 2, headY + 8, 2, 2);
+
+        // Raised curious eyebrow
+        ctx.strokeStyle = '#000000';
+        ctx.lineWidth = 1.5;
+        ctx.beginPath();
+        ctx.moveTo(-8, headY + 3); ctx.lineTo(-4, headY + 3);
+        ctx.moveTo(3, headY + 4); ctx.lineTo(7, headY + 4);
+        ctx.stroke();
+
+      } else if (isPausing && frame % 120 < 60) {
+        // Sleeping curve eyes
+        ctx.strokeStyle = '#1f2937';
+        ctx.lineWidth = 1.5;
+        ctx.beginPath();
+        ctx.arc(-5 + eyeOffset, headY + 8, 2.5, 0, Math.PI, true);
+        ctx.arc(5 + eyeOffset, headY + 8, 2.5, 0, Math.PI, true);
+        ctx.stroke();
+
+        // Blue sweat droplet on forehead
+        ctx.fillStyle = '#38bdf8';
+        ctx.beginPath();
+        ctx.moveTo(11, headY + 1);
+        ctx.lineTo(13, headY + 4);
+        ctx.lineTo(9, headY + 4);
+        ctx.closePath();
+        ctx.fill();
+        ctx.beginPath();
+        ctx.arc(11, headY + 4, 2, 0, Math.PI * 2);
+        ctx.fill();
+
+      } else if (isPausing && frame % 120 >= 60) {
+        // Smiley closed curve eyes
+        ctx.strokeStyle = '#111827';
+        ctx.lineWidth = 1.5;
+        ctx.beginPath();
+        ctx.arc(-5, headY + 10, 2.5, 0, Math.PI, true);
+        ctx.arc(5, headY + 10, 2.5, 0, Math.PI, true);
+        ctx.stroke();
+
+        // Small satisfied smile
+        ctx.beginPath();
+        ctx.arc(0, headY + 14, 2, 0, Math.PI);
+        ctx.stroke();
+
+        // Sparkly stars next to crown
+        if (frame % 20 < 10) {
+          ctx.fillStyle = '#facc15';
+          ctx.fillText('✨', 14, headY + 4);
+        }
+      } else {
+        ctx.fillStyle = '#111827';
+        ctx.fillRect(-7 + eyeOffset, headY + 7, 3, 5);
+        ctx.fillRect(4 + eyeOffset, headY + 7, 3, 5);
+        
+        // Stern straight mouth
+        ctx.fillStyle = '#111827';
+        ctx.fillRect(-3, headY + 15, 6, 1.5);
+      }
+    } else {
+      // --- TURNING HEAD BACK ---
+      const hairColor = '#1e111a';
+      ctx.fillStyle = hairColor;
+      ctx.beginPath();
+      ctx.roundRect(-14, headY, 28, 20, 8);
+      ctx.fill();
+
+      // Additional combed strands at the neck base
+      ctx.fillRect(-12, headY + 12, 24, 7);
+    }
   }
 
   // --- Alert Icons Over Head ---

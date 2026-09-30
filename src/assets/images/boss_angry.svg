@@ -1,0 +1,66 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="64" height="64" shape-rendering="crispEdges">
+  <!-- Sếp Alert / Surprised State ("Phát hiện" / "Bực mình" - IMG_2622.png / IMG_2627.png) -->
+  
+  <!-- Shadow under character -->
+  <ellipse cx="16" cy="30" rx="11" ry="2" fill="rgba(0, 0, 0, 0.25)" />
+
+  <!-- Back Hair & Ears -->
+  <rect x="7" y="5" width="18" height="11" fill="#1e111a" />
+  <rect x="6" y="9" width="20" height="4" fill="#1e111a" />
+  <rect x="5" y="10" width="1" height="2" fill="#fed7aa" /> <!-- Left Ear -->
+  <rect x="26" y="10" width="1" height="2" fill="#fed7aa" /> <!-- Right Ear -->
+
+  <!-- Face Skin Tone Base -->
+  <rect x="8" y="7" width="16" height="10" fill="#fed7aa" />
+  
+  <!-- Front Combed Volume Hair -->
+  <rect x="8" y="3" width="16" height="3" fill="#1e111a" />
+  <rect x="9" y="2" width="14" height="1" fill="#2d1e29" /> <!-- Hair volume top -->
+  <rect x="7" y="6" width="2" height="6" fill="#1e111a" /> <!-- Left side lock -->
+  <rect x="23" y="6" width="2" height="6" fill="#1e111a" /> <!-- Right side lock -->
+
+  <!-- Thick Square Designer Glasses Frame -->
+  <rect x="9" y="8" width="6" height="5" fill="#000000" />
+  <rect x="17" y="8" width="6" height="5" fill="#000000" />
+  <rect x="15" y="10" width="2" height="1" fill="#000000" /> <!-- Glasses Bridge -->
+  <!-- Surprised Angry Crimson Eyes -->
+  <rect x="10" y="9" width="4" height="3" fill="#ef4444" />
+  <rect x="18" y="9" width="4" height="3" fill="#ef4444" />
+  <rect x="11" y="10" width="2" height="2" fill="#000000" /> <!-- Shocked black pupils -->
+
+  <!-- Rosy Blush Cheeks -->
+  <rect x="8" y="13" width="2" height="1" fill="rgba(244, 63, 94, 0.45)" />
+  <rect x="22" y="13" width="2" height="1" fill="rgba(244, 63, 94, 0.45)" />
+
+  <!-- Screaming wide open mouth -->
+  <ellipse cx="16" cy="15" rx="3" ry="1.5" fill="#000000" />
+
+  <!-- Torso: Navy Blue Corporate Suit -->
+  <rect x="9" y="17" width="14" height="8" fill="#1e243b" />
+  
+  <!-- White Shirt Collar Peeking & Sharp Red Tie -->
+  <rect x="14" y="17" width="4" height="2" fill="#ffffff" />
+  <rect x="15" y="18" width="2" height="5" fill="#dc2626" /> <!-- Red Tie -->
+  <rect x="14" y="21" width="4" height="1" fill="#dc2626" />
+
+  <!-- Blue ID Badge Lanyard -->
+  <rect x="12" y="17" width="1" height="3" fill="#3b82f6" />
+  <rect x="19" y="17" width="1" height="3" fill="#3b82f6" />
+  <rect x="12" y="20" width="2" height="3" fill="#ffffff" /> <!-- ID Badge -->
+  <rect x="12" y="20" width="2" height="1" fill="#3b82f6" />
+
+  <!-- Dark Trousers -->
+  <rect x="10" y="25" width="12" height="4" fill="#111827" />
+
+  <!-- Shiny Black Leather Shoes -->
+  <rect x="9" y="29" width="5" height="1.5" fill="#020617" />
+  <rect x="18" y="29" width="5" height="1.5" fill="#020617" />
+
+  <!-- Red Anger Vein Pops on Left Top (IMG_2627.png) -->
+  <path d="M 4 2 L 8 6 M 8 2 L 4 6" stroke="#ef4444" stroke-width="1.2" />
+  <path d="M 24 2 L 28 6 M 28 2 L 24 6" stroke="#ef4444" stroke-width="1.2" />
+
+  <!-- Surprised Red Exclamation mark directly overhead -->
+  <rect x="15" y="-6" width="2" height="5" fill="#ef4444" />
+  <rect x="15" y="0" width="2" height="2" fill="#ef4444" />
+</svg>
