@@ -39,6 +39,9 @@ export interface Boss {
   isSkillActive?: boolean;      // True when rage skill (mega scan) is on
   skillDuration?: number;       // Remaining duration of active skill (e.g. 8s)
   skillCooldown?: number;       // Countdown until next skill trigger (e.g. 60s)
+  path?: Vector2D[];           // Path calculated by A* pathfinding
+  pathTarget?: Vector2D;       // The final target coordinate of the current path
+  pathRecalcTimer?: number;    // Timer to throttle A* path recalculation (in frames)
 }
 
 export interface SecurityCamera {

@@ -279,7 +279,7 @@ export const STORY_LEVELS: FloorLevel[] = [
       { x: 80, y: 500, width: 45, height: 45, type: 'water_cooler', label: 'Bình Nước' },
 
       { x: 740, y: 420, width: 230, height: 20, type: 'wall' },
-      { x: 740, y: 420, width: 20, height: 250, type: 'wall' }
+      { x: 740, y: 420, width: 20, height: 110, type: 'wall' }
     ],
     hidingSpots: [
       { id: 'box_1', type: 'box', x: 220, y: 100, width: 50, height: 50, isOccupied: false },
@@ -365,7 +365,7 @@ export const STORY_LEVELS: FloorLevel[] = [
       { x: 100, y: 340, width: 180, height: 50, type: 'cubicle', label: 'Bàn Content' },
       { x: 100, y: 480, width: 180, height: 50, type: 'cubicle', label: 'Bàn Media' },
 
-      { x: 740, y: 30, width: 20, height: 220, type: 'wall' },
+      { x: 740, y: 30, width: 20, height: 110, type: 'wall' },
       { x: 740, y: 230, width: 280, height: 20, type: 'wall' },
       { x: 820, y: 90, width: 80, height: 70, type: 'printer', label: 'Máy In Photocopy' },
 
@@ -717,7 +717,7 @@ export const STORY_LEVELS: FloorLevel[] = [
       { x: 0, y: 0, width: 30, height: 760, type: 'wall' },
       { x: 1170, y: 0, width: 30, height: 760, type: 'wall' },
 
-      { x: 30, y: 220, width: 220, height: 25, type: 'wall' },
+      { x: 30, y: 220, width: 100, height: 25, type: 'wall' },
       { x: 225, y: 30, width: 25, height: 200, type: 'wall' },
 
       { x: 480, y: 260, width: 240, height: 70, type: 'cubicle', label: 'Quầy Lễ Tân Đại Sảnh' },

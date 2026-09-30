@@ -9,6 +9,7 @@ import {
   PlayerUpgrades,
   GameMode
 } from '../types/game';
+import { findPath } from '../utils/pathfinding';
 import {
   drawOfficeFloor,
   drawObstacles,
@@ -887,73 +888,123 @@ export const OfficeGameCanvas: React.FC<OfficeGameCanvasProps> = ({
           }
         };
 
-        // Boss movement based on state
+        // --- INTELLIGENT A* PATHFINDING & STEERING ROUTINE FOR SẾP ---
+        let finalTarget: Vector2D | null = null;
         if (boss.state === 'chase' && boss.investigateTarget) {
-          const target = canSeePlayer ? pCenter : boss.investigateTarget;
-          const dx = target.x - bCenter.x;
-          const dy = target.y - bCenter.y;
-          const dist = Math.hypot(dx, dy);
+          finalTarget = canSeePlayer ? pCenter : boss.investigateTarget;
+        } else if (boss.state === 'investigate' && boss.investigateTarget) {
+          finalTarget = boss.investigateTarget;
+        } else if (boss.patrolPoints && boss.patrolPoints.length > 0) {
+          if (!boss.patrolWaitTimer || boss.patrolWaitTimer <= 0) {
+            if (boss.currentPointIndex >= boss.patrolPoints.length) {
+              boss.currentPointIndex = 0;
+            }
+            finalTarget = boss.patrolPoints[boss.currentPointIndex];
+          }
+        }
 
+        // Calculate or refresh the A* path to the target
+        if (finalTarget) {
+          if (boss.pathRecalcTimer === undefined) boss.pathRecalcTimer = 0;
+          boss.pathRecalcTimer--;
+
+          const targetChanged = !boss.pathTarget || Math.hypot(boss.pathTarget.x - finalTarget.x, boss.pathTarget.y - finalTarget.y) > 20;
+          const needsRecalc = targetChanged || !boss.path || boss.path.length === 0 || boss.pathRecalcTimer <= 0;
+
+          if (needsRecalc) {
+            boss.pathTarget = { ...finalTarget };
+            // Throttle calculations for high performance: 10 frames during chase (~0.16s), 30 frames in patrol (~0.5s)
+            boss.pathRecalcTimer = boss.state === 'chase' ? 10 : 30;
+
+            const bossPos = { x: bCenter.x, y: bCenter.y };
+            boss.path = findPath(bossPos, finalTarget, s.level.walls, s.level.mapWidth, s.level.mapHeight, Math.max(boss.width, boss.height));
+          }
+        } else {
+          boss.path = undefined;
+          boss.pathTarget = undefined;
+        }
+
+        // Steering logic: move towards the first node of the precalculated path
+        let moveTarget: Vector2D | null = null;
+        if (boss.path && boss.path.length > 0) {
+          let firstWaypoint = boss.path[0];
+          let distToWaypoint = Math.hypot(firstWaypoint.x - bCenter.x, firstWaypoint.y - bCenter.y);
+
+          // If sếp is close to the current waypoint, shift to the next one
+          while (distToWaypoint < 20 && boss.path.length > 1) {
+            boss.path.shift();
+            firstWaypoint = boss.path[0];
+            distToWaypoint = Math.hypot(firstWaypoint.x - bCenter.x, firstWaypoint.y - bCenter.y);
+          }
+
+          // If we reached the final node, complete the path
+          if (boss.path.length === 1 && distToWaypoint < 12) {
+            boss.path.shift();
+          }
+
+          if (boss.path.length > 0) {
+            moveTarget = firstWaypoint;
+          }
+        }
+
+        // Fallback to direct straight-line movement if no path was generated
+        if (!moveTarget && finalTarget) {
+          moveTarget = finalTarget;
+        }
+
+        const dx = moveTarget ? moveTarget.x - bCenter.x : 0;
+        const dy = moveTarget ? moveTarget.y - bCenter.y : 0;
+        const dist = Math.hypot(dx, dy);
+
+        // Apply movement using our computed moveTarget
+        if (boss.state === 'chase' && boss.investigateTarget) {
           if (dist > 10) {
             boss.facingAngle = Math.atan2(dy, dx);
             const chaseSpeed = currentBossSpeed * 1.35;
             moveBossWithCollision((dx / dist) * chaseSpeed, (dy / dist) * chaseSpeed);
           }
 
-          // Caught check! (36px)
-          if (canSeePlayer && dist < 36 && !s.hasLost && !s.hasWon) {
+          // Caught check: triggers if boss touches the player (radius 36px)
+          const playerDist = Math.hypot(pCenter.x - bCenter.x, pCenter.y - bCenter.y);
+          if (canSeePlayer && playerDist < 36 && !s.hasLost && !s.hasWon) {
             s.hasLost = true;
             soundManager.playCaught();
             onPlayerCaught();
           }
         } else if (boss.state === 'investigate' && boss.investigateTarget) {
-          const dx = boss.investigateTarget.x - bCenter.x;
-          const dy = boss.investigateTarget.y - bCenter.y;
-          const dist = Math.hypot(dx, dy);
-
           if (dist > 15) {
             boss.facingAngle = Math.atan2(dy, dx);
             moveBossWithCollision((dx / dist) * currentBossSpeed, (dy / dist) * currentBossSpeed);
           } else {
-            // Reached suspect spot, look around
+            // Reached last known location, look around before resuming patrol
             boss.investigateTimer--;
             boss.facingAngle += Math.sin(s.frame * 0.08) * 0.04;
             if (boss.investigateTimer <= 0) {
               boss.state = 'patrol';
               boss.investigateTarget = undefined;
+              boss.path = undefined;
             }
           }
         } else {
-          // --- UNPREDICTABLE RANDOM PATROL PATH (ALL CORRIDORS) ---
+          // Patrol State
           if (boss.patrolPoints && boss.patrolPoints.length > 0) {
-            // Check if boss is briefly pausing at a waypoint to inspect
             if (boss.patrolWaitTimer && boss.patrolWaitTimer > 0) {
               boss.patrolWaitTimer--;
-              // Look around naturally (rotate cone angle)
               boss.facingAngle += Math.sin(s.frame * 0.12) * 0.05;
             } else {
-              // Ensure valid currentPointIndex
-              if (boss.currentPointIndex >= boss.patrolPoints.length) {
-                boss.currentPointIndex = 0;
-              }
-              const targetPoint = boss.patrolPoints[boss.currentPointIndex];
-              const dx = targetPoint.x - bCenter.x;
-              const dy = targetPoint.y - bCenter.y;
-              const dist = Math.hypot(dx, dy);
-
               if (dist > 18) {
                 boss.facingAngle = Math.atan2(dy, dx);
                 moveBossWithCollision((dx / dist) * currentBossSpeed, (dy / dist) * currentBossSpeed);
               } else {
-                // Arrived at waypoint! Pause 20-40 frames (~0.4s-0.8s) to scan
+                // Arrived at patrol waypoint! Pause briefly and scan
                 boss.patrolWaitTimer = 20 + Math.floor(Math.random() * 25);
+                boss.path = undefined;
 
-                // Choose a random NEXT waypoint index that is NOT the same as current or immediately previous point
+                // Pick a smart next waypoint that is not the same
                 if (boss.patrolPoints.length > 1) {
                   const currentIdx = boss.currentPointIndex;
                   const lastIdx = boss.lastPointIndex ?? -1;
 
-                  // Filter available candidate indices
                   const candidates: number[] = [];
                   for (let i = 0; i < boss.patrolPoints.length; i++) {
                     if (i !== currentIdx && (boss.patrolPoints.length <= 2 || i !== lastIdx)) {
@@ -969,7 +1020,7 @@ export const OfficeGameCanvas: React.FC<OfficeGameCanvasProps> = ({
                   boss.currentPointIndex = chosenIndex;
                 }
 
-                // 10% chance to express boss thought bubble showing unpredictable routing
+                // Random thoughts
                 if (Math.random() < 0.10 && (!boss.yellTimer || boss.yellTimer <= 0)) {
                   const thoughts = [
                     'Rà soát đường ngẫu nhiên!',
