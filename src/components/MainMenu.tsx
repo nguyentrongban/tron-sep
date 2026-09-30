@@ -64,52 +64,52 @@ export const MainMenu: React.FC<MainMenuProps> = ({
   ];
 
   return (
-    <div className="relative h-[100dvh] w-full bg-[#0B091A] text-slate-100 flex flex-col justify-between p-1.5 sm:p-2.5 overflow-hidden font-chibi select-none">
+    <div className="relative h-[100dvh] w-full bg-[#0B091A] text-slate-100 flex flex-col justify-between p-1 sm:p-2 overflow-hidden font-chibi select-none">
       {/* Ambient background office glow & scanlines */}
       <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-indigo-900/30 via-slate-950 to-[#05040F] pointer-events-none" />
       <div className="scanlines absolute inset-0 pointer-events-none opacity-20" />
 
-      {/* COMBINED ULTRA-LANDSCAPE TOP HEADER ROW */}
-      <div className="w-full max-w-6xl mx-auto flex items-center justify-between z-20 gap-2 shrink-0 py-0.5">
+      {/* ULTRA-COMPACT TOP HEADER ROW */}
+      <div className="w-full max-w-6xl mx-auto flex items-center justify-between z-20 gap-1.5 shrink-0 py-0.5">
         {/* Left Utilities */}
         <div className="flex items-center gap-1 sm:gap-1.5">
           <button
             onClick={onOpenShop}
-            className="px-2 py-0.5 rounded-full bg-amber-500/20 border border-amber-400/60 hover:border-amber-300 text-amber-300 font-pixel text-[10px] sm:text-xs flex items-center gap-1 active:scale-95 transition-all shadow-md cursor-pointer"
+            className="px-1.5 sm:px-2 py-0.5 rounded-full bg-amber-500/20 border border-amber-400/60 hover:border-amber-300 text-amber-300 font-pixel text-[9px] sm:text-xs flex items-center gap-1 active:scale-95 transition-all shadow-md cursor-pointer"
           >
-            <LottieStickerIcon name="coin" size={16} />
+            <LottieStickerIcon name="coin" size={14} />
             <span className="font-bold">{coins} Xu</span>
           </button>
 
           <button
             onClick={onOpenLuckyWheel}
-            className="px-2 py-0.5 rounded-full bg-gradient-to-r from-purple-900/80 to-pink-900/80 border border-pink-400/60 hover:border-pink-300 text-pink-200 font-pixel text-[10px] sm:text-xs flex items-center gap-1 active:scale-95 transition-all shadow-md cursor-pointer"
+            className="px-1.5 sm:px-2 py-0.5 rounded-full bg-gradient-to-r from-purple-900/80 to-pink-900/80 border border-pink-400/60 hover:border-pink-300 text-pink-200 font-pixel text-[9px] sm:text-xs flex items-center gap-1 active:scale-95 transition-all shadow-md cursor-pointer"
           >
-            <LottieStickerIcon name="wheel" size={16} />
+            <LottieStickerIcon name="wheel" size={14} />
             <span className="hidden xs:inline">VÒNG QUAY</span>
           </button>
 
           <button
             onClick={onStartTutorial}
-            className="hidden md:flex px-2 py-0.5 rounded-full bg-sky-950/80 border border-sky-400/50 text-sky-300 font-pixel text-[10px] items-center gap-1 active:scale-95 transition-all cursor-pointer"
+            className="hidden md:flex px-2 py-0.5 rounded-full bg-sky-950/80 border border-sky-400/50 text-sky-300 font-pixel text-[9px] items-center gap-1 active:scale-95 transition-all cursor-pointer"
           >
-            <LottieStickerIcon name="help" size={14} />
+            <LottieStickerIcon name="help" size={12} />
             <span>HƯỚNG DẪN</span>
           </button>
         </div>
 
         {/* Center Compact Title Logo */}
-        <div className="flex items-center gap-1.5">
-          <div className="font-pixel text-lg sm:text-2xl md:text-3xl tracking-wider text-sky-300 drop-shadow-[0_2px_0_#1E3A8A]">
+        <div className="flex items-center gap-1">
+          <div className="font-pixel text-base sm:text-2xl md:text-3xl tracking-wider text-sky-300 drop-shadow-[0_2px_0_#1E3A8A]">
             <span className="bg-clip-text text-transparent bg-gradient-to-b from-sky-200 via-sky-300 to-cyan-400">
               TRỐN SẾP
             </span>
           </div>
-          <div className="font-pixel text-lg sm:text-2xl md:text-3xl tracking-wider text-amber-400 drop-shadow-[0_2px_0_#78350F] flex items-center gap-0.5">
+          <div className="font-pixel text-base sm:text-2xl md:text-3xl tracking-wider text-amber-400 drop-shadow-[0_2px_0_#78350F] flex items-center gap-0.5">
             <span className="bg-clip-text text-transparent bg-gradient-to-b from-yellow-200 via-amber-300 to-yellow-500">
               TAN CA
             </span>
-            <span className="text-sm sm:text-lg animate-spin" style={{ animationDuration: '8s' }}>
+            <span className="text-xs sm:text-base animate-spin" style={{ animationDuration: '8s' }}>
               🕒
             </span>
           </div>
@@ -119,17 +119,17 @@ export const MainMenu: React.FC<MainMenuProps> = ({
         <div className="flex items-center gap-1 sm:gap-1.5">
           <button
             onClick={onOpenHallOfFame}
-            className="px-2 py-0.5 rounded-full bg-slate-900/90 border border-amber-500/60 text-amber-300 font-pixel text-[10px] sm:text-xs flex items-center gap-1 active:scale-95 transition-all cursor-pointer"
+            className="px-1.5 sm:px-2 py-0.5 rounded-full bg-slate-900/90 border border-amber-500/60 text-amber-300 font-pixel text-[9px] sm:text-xs flex items-center gap-1 active:scale-95 transition-all cursor-pointer"
           >
-            <LottieStickerIcon name="trophy" size={16} />
+            <LottieStickerIcon name="trophy" size={14} />
             <span className="hidden sm:inline">VINH DANH</span>
           </button>
 
           <button
             onClick={onOpenWardrobe}
-            className="px-2 py-0.5 rounded-full bg-indigo-950/80 border border-indigo-400/60 text-indigo-300 font-pixel text-[10px] sm:text-xs flex items-center gap-1 active:scale-95 transition-all cursor-pointer"
+            className="px-1.5 sm:px-2 py-0.5 rounded-full bg-indigo-950/80 border border-indigo-400/60 text-indigo-300 font-pixel text-[9px] sm:text-xs flex items-center gap-1 active:scale-95 transition-all cursor-pointer"
           >
-            <LottieStickerIcon name="wardrobe" size={16} />
+            <LottieStickerIcon name="wardrobe" size={14} />
             <span className="hidden sm:inline">TỦ ĐỒ</span>
           </button>
 
@@ -137,44 +137,44 @@ export const MainMenu: React.FC<MainMenuProps> = ({
             onClick={onToggleMute}
             className="p-1 rounded-full bg-slate-900/90 border border-slate-700 text-slate-300 cursor-pointer"
           >
-            {isMuted ? <VolumeX className="w-3.5 h-3.5 text-red-400" /> : <Volume2 className="w-3.5 h-3.5 text-emerald-400" />}
+            {isMuted ? <VolumeX className="w-3 h-3 text-red-400" /> : <Volume2 className="w-3 h-3 text-emerald-400" />}
           </button>
 
           <button
             onClick={onOpenHelp}
             className="p-1 rounded-full bg-slate-900/90 border border-slate-700 text-sky-400 cursor-pointer"
           >
-            <HelpCircle className="w-3.5 h-3.5" />
+            <HelpCircle className="w-3 h-3" />
           </button>
         </div>
       </div>
 
-      {/* MAIN CONSOLE FRAME: RESPONSIVE 2-COLUMN SIDE-BY-SIDE LANDSCAPE GRID */}
-      <div className="w-full max-w-5xl mx-auto z-20 my-auto flex-1 flex flex-col justify-center overflow-hidden">
-        <div className="relative border-2 border-[#8B5CF6] shadow-[0_0_20px_rgba(139,92,246,0.4)] rounded-2xl bg-[#110E2E]/95 overflow-hidden p-2 sm:p-3 flex flex-col md:flex-row gap-2.5 sm:gap-3 items-stretch justify-between h-full max-h-[85vh]">
+      {/* MAIN CONSOLE FRAME: FLEX FIT NO CUTOFF */}
+      <div className="w-full max-w-5xl mx-auto z-20 my-auto flex-1 min-h-0 flex flex-col justify-center overflow-hidden py-1">
+        <div className="relative border-2 border-[#8B5CF6] shadow-[0_0_20px_rgba(139,92,246,0.4)] rounded-2xl bg-[#110E2E]/95 overflow-hidden p-1.5 sm:p-2.5 flex flex-row gap-2 sm:gap-3 items-stretch justify-between h-full min-h-0 max-h-full">
           
           {/* LEFT PANEL: MODE SWITCHER + LEVEL INFO + BIG PLAY BUTTON */}
-          <div className="flex-1 flex flex-col justify-between gap-1.5 p-1 bg-slate-950/60 rounded-xl border border-indigo-900/50">
+          <div className="flex-1 min-h-0 flex flex-col justify-between gap-1 p-1 sm:p-1.5 bg-slate-950/60 rounded-xl border border-indigo-900/50 overflow-hidden">
             {/* Top Status & Mode Bar */}
-            <div className="flex items-center justify-between gap-1 border-b border-indigo-900/60 pb-1">
-              <div className="font-pixel text-[10px] sm:text-xs text-amber-300 flex items-center gap-1">
-                <span>❤️ ❤️ ❤️</span>
-                <span className="truncate max-w-[140px] sm:max-w-none">| {floorList[selectedFloor - 1]?.name}</span>
+            <div className="flex items-center justify-between gap-1 border-b border-indigo-900/60 pb-1 shrink-0">
+              <div className="font-pixel text-[9px] sm:text-xs text-amber-300 flex items-center gap-1 truncate">
+                <span>❤️3</span>
+                <span className="truncate">| {floorList[selectedFloor - 1]?.name}</span>
               </div>
 
               {/* Mode Switcher */}
-              <div className="flex items-center bg-slate-900 p-0.5 rounded-lg border border-slate-800">
+              <div className="flex items-center bg-slate-900 p-0.5 rounded-lg border border-slate-800 shrink-0">
                 <button
                   onClick={() => setIsNightmareTab(false)}
-                  className={`px-2 py-0.5 rounded font-pixel text-[9px] cursor-pointer ${
+                  className={`px-1.5 py-0.5 rounded font-pixel text-[8px] sm:text-[9px] cursor-pointer ${
                     !isNightmareTab ? 'bg-amber-500 text-slate-950 font-bold' : 'text-slate-400'
                   }`}
                 >
-                  Ải Thường
+                  Thường
                 </button>
                 <button
                   onClick={() => setIsNightmareTab(true)}
-                  className={`px-2 py-0.5 rounded font-pixel text-[9px] cursor-pointer flex items-center gap-0.5 ${
+                  className={`px-1.5 py-0.5 rounded font-pixel text-[8px] sm:text-[9px] cursor-pointer flex items-center gap-0.5 ${
                     isNightmareTab ? 'bg-red-600 text-white font-bold' : 'text-red-400'
                   }`}
                 >
@@ -185,14 +185,14 @@ export const MainMenu: React.FC<MainMenuProps> = ({
             </div>
 
             {/* Selected Level Description Box */}
-            <div className="p-2 rounded-lg bg-slate-900/90 border border-indigo-900/80 text-left flex-1 flex flex-col justify-center">
-              <div className="font-pixel text-[11px] sm:text-xs text-amber-300 font-bold mb-0.5 flex items-center justify-between">
+            <div className="p-1.5 sm:p-2 rounded-lg bg-slate-900/90 border border-indigo-900/80 text-left flex-1 min-h-0 flex flex-col justify-center overflow-y-auto">
+              <div className="font-pixel text-[10px] sm:text-xs text-amber-300 font-bold mb-0.5 flex items-center justify-between">
                 <span>{floorList[selectedFloor - 1]?.name}</span>
                 {selectedFloor > maxLevelUnlocked && (
                   <span className="text-red-400 font-pixel text-[8px]">🔒 CẦN VƯỢT ẢI {selectedFloor - 1}</span>
                 )}
               </div>
-              <p className="text-[10px] sm:text-[11px] text-slate-300 font-chibi leading-snug">
+              <p className="text-[9px] sm:text-[11px] text-slate-300 font-chibi leading-tight">
                 {selectedFloor > maxLevelUnlocked
                   ? `Hãy hoàn thành Ải ${selectedFloor - 1} để mở khóa màn chơi này!`
                   : isNightmareTab
@@ -209,7 +209,7 @@ export const MainMenu: React.FC<MainMenuProps> = ({
                 }
               }}
               disabled={selectedFloor > maxLevelUnlocked}
-              className={`w-full py-2.5 font-pixel text-xs sm:text-sm rounded-xl font-bold shadow-lg flex items-center justify-center gap-2 transition-all shrink-0 ${
+              className={`w-full py-2 sm:py-2.5 font-pixel text-xs sm:text-sm rounded-xl font-bold shadow-lg flex items-center justify-center gap-1.5 transition-all shrink-0 ${
                 selectedFloor > maxLevelUnlocked
                   ? 'bg-slate-800 text-slate-500 border border-slate-700 cursor-not-allowed'
                   : isNightmareTab
@@ -221,18 +221,18 @@ export const MainMenu: React.FC<MainMenuProps> = ({
                 <span>🔒 CẦN VƯỢT ẢI {selectedFloor - 1}</span>
               ) : (
                 <>
-                  <Play className="w-4 h-4 fill-current" />
-                  <span>{isNightmareTab ? `BẮT ĐẦU ÁC MỘNG ẢI ${selectedFloor}` : `BẮT ĐẦU VƯỢT ẢI ${selectedFloor}`}</span>
+                  <Play className="w-3.5 h-3.5 fill-current" />
+                  <span className="truncate">{isNightmareTab ? `BẮT ĐẦU ÁC MỘNG ẢI ${selectedFloor}` : `BẮT ĐẦU VƯỢT ẢI ${selectedFloor}`}</span>
                 </>
               )}
             </button>
           </div>
 
           {/* RIGHT PANEL: LEVEL PILLS GRID 1-8 + QUICK ACTIONS */}
-          <div className="flex-1 flex flex-col justify-between gap-1.5 p-1 bg-slate-950/60 rounded-xl border border-indigo-900/50">
+          <div className="flex-1 min-h-0 flex flex-col justify-between gap-1 p-1 sm:p-1.5 bg-slate-950/60 rounded-xl border border-indigo-900/50 overflow-hidden">
             {/* Floor Grid 1 - 8 (2 Rows of 4 Buttons) */}
-            <div>
-              <div className="font-pixel text-[10px] text-indigo-300 mb-1 text-left">CHỌN ẢI (1 - 8):</div>
+            <div className="flex-1 min-h-0 flex flex-col justify-center">
+              <div className="font-pixel text-[9px] sm:text-[10px] text-indigo-300 mb-1 text-left shrink-0">CHỌN ẢI (1 - 8):</div>
               <div className="grid grid-cols-4 gap-1">
                 {floorList.map((fl) => {
                   const isUnlocked = fl.id <= maxLevelUnlocked;
@@ -241,7 +241,7 @@ export const MainMenu: React.FC<MainMenuProps> = ({
                     <button
                       key={fl.id}
                       onClick={() => setSelectedFloor(fl.id)}
-                      className={`p-1.5 rounded-lg border text-center transition-all cursor-pointer active:scale-95 ${
+                      className={`p-1 sm:p-1.5 rounded-lg border text-center transition-all cursor-pointer active:scale-95 ${
                         isSelected
                           ? isNightmareTab
                             ? 'bg-red-600/40 border-red-400 text-red-200 ring-1 ring-red-400 font-bold'
@@ -251,7 +251,7 @@ export const MainMenu: React.FC<MainMenuProps> = ({
                           : 'bg-slate-900/40 border-slate-900 text-slate-600 opacity-60'
                       }`}
                     >
-                      <div className="text-xs mb-0.5">
+                      <div className="text-[11px] sm:text-xs mb-0.5">
                         {!isUnlocked ? '🔒' : isNightmareTab ? '💀' : fl.icon}
                       </div>
                       <div className="font-pixel text-[8px] sm:text-[9px]">ẢI {fl.id}</div>
@@ -262,19 +262,19 @@ export const MainMenu: React.FC<MainMenuProps> = ({
             </div>
 
             {/* Quick Action Navigation Buttons */}
-            <div className="grid grid-cols-4 gap-1 pt-1 border-t border-indigo-900/60">
+            <div className="grid grid-cols-4 gap-1 pt-1 border-t border-indigo-900/60 shrink-0">
               <button
                 onClick={onOpenShop}
-                className="p-1 rounded-lg bg-indigo-950/80 border border-indigo-500/40 hover:border-indigo-400 text-indigo-300 font-pixel text-[9px] flex items-center justify-center gap-1 active:scale-95 cursor-pointer"
+                className="p-1 rounded-lg bg-indigo-950/80 border border-indigo-500/40 hover:border-indigo-400 text-indigo-300 font-pixel text-[8px] sm:text-[9px] flex items-center justify-center gap-0.5 active:scale-95 cursor-pointer truncate"
               >
-                <LottieStickerIcon name="shop" size={14} />
+                <LottieStickerIcon name="shop" size={12} />
                 <span>SHOP</span>
               </button>
               <button
                 onClick={onOpenMissions}
-                className="p-1 rounded-lg bg-indigo-950/80 border border-indigo-500/40 hover:border-indigo-400 text-indigo-300 font-pixel text-[9px] flex items-center justify-center gap-1 active:scale-95 cursor-pointer relative"
+                className="p-1 rounded-lg bg-indigo-950/80 border border-indigo-500/40 hover:border-indigo-400 text-indigo-300 font-pixel text-[8px] sm:text-[9px] flex items-center justify-center gap-0.5 active:scale-95 cursor-pointer relative truncate"
               >
-                <LottieStickerIcon name="trophy" size={14} />
+                <LottieStickerIcon name="trophy" size={12} />
                 <span>N.VỤ</span>
                 {unclaimedMissionsCount > 0 && (
                   <span className="absolute -top-0.5 -right-0.5 w-2 h-2 bg-red-500 rounded-full animate-ping" />
@@ -282,16 +282,16 @@ export const MainMenu: React.FC<MainMenuProps> = ({
               </button>
               <button
                 onClick={onOpenWardrobe}
-                className="p-1 rounded-lg bg-indigo-950/80 border border-indigo-500/40 hover:border-indigo-400 text-indigo-300 font-pixel text-[9px] flex items-center justify-center gap-1 active:scale-95 cursor-pointer"
+                className="p-1 rounded-lg bg-indigo-950/80 border border-indigo-500/40 hover:border-indigo-400 text-indigo-300 font-pixel text-[8px] sm:text-[9px] flex items-center justify-center gap-0.5 active:scale-95 cursor-pointer truncate"
               >
-                <LottieStickerIcon name="wardrobe" size={14} />
+                <LottieStickerIcon name="wardrobe" size={12} />
                 <span>TỦ ĐỒ</span>
               </button>
               <button
                 onClick={onStartBossHunt}
-                className="p-1 rounded-lg bg-gradient-to-r from-amber-600/40 to-orange-600/40 border border-amber-500/60 text-amber-300 font-pixel text-[9px] flex items-center justify-center gap-1 active:scale-95 cursor-pointer"
+                className="p-1 rounded-lg bg-gradient-to-r from-amber-600/40 to-orange-600/40 border border-amber-500/60 text-amber-300 font-pixel text-[8px] sm:text-[9px] flex items-center justify-center gap-0.5 active:scale-95 cursor-pointer truncate"
               >
-                <LottieStickerIcon name="crown" size={14} />
+                <LottieStickerIcon name="crown" size={12} />
                 <span>LÀM SẾP</span>
               </button>
             </div>
@@ -301,10 +301,10 @@ export const MainMenu: React.FC<MainMenuProps> = ({
 
       {/* Bottom Sticky Note Annotation */}
       <div className="w-full max-w-5xl mx-auto flex items-end justify-between z-10 shrink-0 pointer-events-none py-0.5">
-        <div className="text-[10px] text-slate-400 font-pixel">
+        <div className="text-[9px] sm:text-[10px] text-slate-400 font-pixel">
           © Trốn Sếp Tan Ca - 2D Pixel Chibi Stealth
         </div>
-        <div className="px-2 py-0.5 bg-[#FDE047] text-slate-900 font-hand text-xs font-bold rounded shadow rotate-2 border border-amber-300 pointer-events-auto">
+        <div className="px-1.5 py-0.5 bg-[#FDE047] text-slate-900 font-hand text-[10px] sm:text-xs font-bold rounded shadow rotate-2 border border-amber-300 pointer-events-auto">
           <span>Tan ca thôi! 🙂</span>
         </div>
       </div>
