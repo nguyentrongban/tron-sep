@@ -90,11 +90,11 @@ export function drawOfficeFloor(
   ctx.save();
 
   // 1. Fill extended outer carpet background to eliminate black empty voids when camera pans
-  ctx.fillStyle = '#0B091A';
+  ctx.fillStyle = '#060412';
   ctx.fillRect(-2000, -2000, width + 4000, height + 4000);
 
   // Subtle outer floor tile pattern
-  ctx.fillStyle = '#080614';
+  ctx.fillStyle = '#0a081d';
   for (let oy = -2000; oy < height + 2000; oy += 64) {
     for (let ox = -2000; ox < width + 2000; ox += 64) {
       if ((Math.floor(ox / 64) + Math.floor(oy / 64)) % 2 === 0) {
@@ -103,74 +103,97 @@ export function drawOfficeFloor(
     }
   }
 
-  // If the 1600x896 map image is loaded, render it directly as the background map
-  if (width === 1600 && height === 896 && isOfficeMapImgLoaded) {
-    ctx.drawImage(cachedOfficeMapImg, 0, 0, width, height);
+  // 2. PROCEDURAL HIGH-FIDELITY TACTICAL DEPARTMENT MAP (NO IMAGE BG)
+  const tileSize = 32;
 
-    // Subtle ambient lighting overlay
-    ctx.fillStyle = 'rgba(11, 9, 26, 0.15)';
-    ctx.fillRect(0, 0, width, height);
-
-    // Outer wall border shadow
-    ctx.strokeStyle = '#05040F';
-    ctx.lineWidth = 6;
-    ctx.strokeRect(0, 0, width, height);
-
-    ctx.restore();
-    return;
-  }
-
-  const tileSize = (width === 1600 || width % 32 === 0) ? 32 : 40;
-
-  // Dark purple/indigo base carpet color matching "Trốn Sếp Tan Ca"
-  ctx.fillStyle = '#0B091A';
-  ctx.fillRect(0, 0, width, height);
-
-  // 32x32 Checkerboard & carpet pattern
   for (let y = 0; y < height; y += tileSize) {
     for (let x = 0; x < width; x += tileSize) {
       const col = Math.floor(x / tileSize);
       const row = Math.floor(y / tileSize);
 
-      // Boundary wall tile background shadow
+      // Outer boundary wall backgrounds
       if (col === 0 || row === 0 || col === Math.floor(width / tileSize) - 1 || row === Math.floor(height / tileSize) - 1) {
-        ctx.fillStyle = '#05040F';
-      } else if ((col + row) % 2 === 0) {
-        ctx.fillStyle = '#13102C'; // Main office floor tile A
-      } else {
-        ctx.fillStyle = '#1A163B'; // Main office floor tile B
+        ctx.fillStyle = '#020108';
+        ctx.fillRect(x, y, tileSize, tileSize);
+        continue;
       }
+
+      // Determine department floor color programmatically
+      let floorColor = '#0F172A'; // Default slate gray
+      let detailColor: string | null = null;
+
+      if (col < 12 && row < 9) {
+        // IT & Server Room (Top-Left)
+        floorColor = '#1e1b4b'; // Deep Indigo
+        if ((col + row) % 2 === 0) detailColor = '#17153f';
+      } else if (col < 12 && row >= 9 && row < 21) {
+        // QA & Testing Cubicles (Mid-Left)
+        floorColor = '#0f172a'; // Slate dark grey
+        if ((col + row) % 2 === 0) detailColor = '#131c36';
+      } else if (col < 12 && row >= 21) {
+        // Reception & Lobby (Bottom-Left)
+        floorColor = '#1e293b'; // High-class marble-vibe blue
+        if ((col + row) % 2 === 0) detailColor = '#1e243b';
+      } else if (col >= 12 && col < 26) {
+        // Developer & Engineering (Center-Left)
+        floorColor = '#111827'; // Dark Hacker Slate
+        if ((col + row) % 2 === 0) detailColor = '#0c0f1d';
+        // Subtle matrix code green pixel indicators
+        if ((col * row + col) % 23 === 0) detailColor = '#065f46';
+      } else if (col >= 26 && col < 37) {
+        // HR & Marketing (Center-Right)
+        floorColor = '#2e1065'; // Warm Royal Purple
+        if ((col + row) % 2 === 0) detailColor = '#1e0c45';
+      } else if (col >= 37 && col < 44) {
+        // Executive VIP Room (Top-Right)
+        floorColor = '#4a044e'; // Luxurious Wine Maroon
+        if ((col + row) % 2 === 0) detailColor = '#300233';
+      } else {
+        // Exit corridor & Cổng an ninh
+        floorColor = '#1c1917'; // Hazard security grey
+        if ((col + row) % 2 === 0) detailColor = '#0f0e0d';
+      }
+
+      // Draw Base Floor tile
+      ctx.fillStyle = floorColor;
       ctx.fillRect(x, y, tileSize, tileSize);
 
-      // Corridor / Highway Carpet Runners (wide aisles)
-      const isMainAisleHorizontal = (row >= 15 && row <= 17);
-      const isMainAisleVertical = (col >= 12 && col <= 14) || (col >= 25 && col <= 27) || (col >= 38 && col <= 40);
-
-      if (isMainAisleHorizontal || isMainAisleVertical) {
-        ctx.fillStyle = '#231F4D'; // Carpet runner
-        ctx.fillRect(x, y, tileSize, tileSize);
-
-        // Subtle carpet inner stitch line
-        if ((col + row) % 2 === 0) {
-          ctx.fillStyle = '#2D2862';
-          ctx.fillRect(x + 4, y + 4, tileSize - 8, tileSize - 8);
-        }
+      if (detailColor) {
+        ctx.fillStyle = detailColor;
+        ctx.fillRect(x + 2, y + 2, tileSize - 4, tileSize - 4);
       }
 
-      // Executive room carpet (cols 36..48, rows 1..18)
-      if (col >= 36 && col <= 48 && row >= 1 && row <= 18) {
-        ctx.fillStyle = '#2A1F52';
+      // 3. WALKWAYS & CARPET RUNNERS (The open corridors where bosses patrol)
+      // Main Horizontal Highway (rows 14..16)
+      const isHorizontalHighway = (row >= 14 && row <= 16);
+      // Vertical hallways around columns 11..12, 25..26, 36..37
+      const isVerticalHighway = (col >= 11 && col <= 13) || (col >= 25 && col <= 27) || (col >= 37 && col <= 38);
+
+      if (isHorizontalHighway || isVerticalHighway) {
+        // Royal Indigo Blue runner carpet with decorative borders
+        ctx.fillStyle = '#312e81'; 
         ctx.fillRect(x, y, tileSize, tileSize);
+
+        // Pattern on carpet runner
         if ((col + row) % 2 === 0) {
-          ctx.fillStyle = '#342663';
-          ctx.fillRect(x + 2, y + 2, tileSize - 4, tileSize - 4);
+          ctx.fillStyle = '#3730a3';
+          ctx.fillRect(x + 4, y + 4, tileSize - 8, tileSize - 8);
+        }
+
+        // Golden stitch border on the edges of the carpet highways
+        ctx.fillStyle = '#eab308';
+        if (isHorizontalHighway && (row === 14 || row === 16)) {
+          ctx.fillRect(x, row === 14 ? y : y + tileSize - 3, tileSize, 2);
+        }
+        if (isVerticalHighway && (col === 11 || col === 13 || col === 25 || col === 27 || col === 37)) {
+          ctx.fillRect(col === 11 || col === 25 || col === 37 ? x : x + tileSize - 3, y, 2, tileSize);
         }
       }
     }
   }
 
-  // 32x32 Pixel tile grid lines
-  ctx.strokeStyle = '#181432';
+  // Draw thin elegant checker grid lines over the entire board for retro pixel style
+  ctx.strokeStyle = 'rgba(24, 20, 50, 0.25)';
   ctx.lineWidth = 1;
   ctx.beginPath();
   for (let x = 0; x < width; x += tileSize) {
@@ -182,6 +205,11 @@ export function drawOfficeFloor(
     ctx.lineTo(width, y);
   }
   ctx.stroke();
+
+  // Draw decorative outer wall border shadow around the office room map bounds (0,0 to width,height)
+  ctx.strokeStyle = '#020108';
+  ctx.lineWidth = 8;
+  ctx.strokeRect(0, 0, width, height);
 
   ctx.restore();
 }
