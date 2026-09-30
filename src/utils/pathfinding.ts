@@ -46,8 +46,9 @@ export function findPath(
       return false;
     }
 
-    // Agent size buffer to prevent clipping or scraping against wall corners
-    const buffer = agentSize / 2;
+    // A lighter buffer (8px) allows sếp to easily find paths through narrow doorways and corridors,
+    // while the physical collision sliding loop handles the outer body boundaries.
+    const buffer = 8;
 
     for (const wall of walls) {
       if (

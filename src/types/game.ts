@@ -42,6 +42,9 @@ export interface Boss {
   path?: Vector2D[];           // Path calculated by A* pathfinding
   pathTarget?: Vector2D;       // The final target coordinate of the current path
   pathRecalcTimer?: number;    // Timer to throttle A* path recalculation (in frames)
+  stuckFrames?: number;        // Track how many frames sếp has been stuck at the same position
+  lastX?: number;              // Store last X coordinate
+  lastY?: number;              // Store last Y coordinate
 }
 
 export interface SecurityCamera {

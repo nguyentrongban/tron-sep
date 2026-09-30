@@ -903,6 +903,39 @@ export const OfficeGameCanvas: React.FC<OfficeGameCanvasProps> = ({
           }
         }
 
+        // --- STUCK DETECTION & UNJAMMING ENGINE ---
+        if (boss.lastX === undefined) boss.lastX = boss.x;
+        if (boss.lastY === undefined) boss.lastY = boss.y;
+        if (boss.stuckFrames === undefined) boss.stuckFrames = 0;
+
+        const isTryingToMove = !!finalTarget && (boss.state === 'chase' || boss.state === 'investigate' || !boss.patrolWaitTimer || boss.patrolWaitTimer <= 0);
+        if (isTryingToMove) {
+          const deltaMove = Math.hypot(boss.x - boss.lastX, boss.y - boss.lastY);
+          if (deltaMove < 0.4) {
+            boss.stuckFrames++;
+          } else {
+            boss.stuckFrames = 0;
+          }
+        } else {
+          boss.stuckFrames = 0;
+        }
+        boss.lastX = boss.x;
+        boss.lastY = boss.y;
+
+        if (boss.stuckFrames > 15) {
+          boss.stuckFrames = 0;
+          if (boss.path && boss.path.length > 0) {
+            // Force skip the blocked waypoint
+            boss.path.shift();
+          }
+          boss.pathRecalcTimer = 0; // Trigger immediate path recalculation next frame
+
+          // Slight physics-abiding nudge in a random direction to dislodge from corners
+          const nudgeAngle = Math.random() * Math.PI * 2;
+          const nudgeSpeed = currentBossSpeed * 1.5;
+          moveBossWithCollision(Math.cos(nudgeAngle) * nudgeSpeed, Math.sin(nudgeAngle) * nudgeSpeed);
+        }
+
         // Calculate or refresh the A* path to the target
         if (finalTarget) {
           if (boss.pathRecalcTimer === undefined) boss.pathRecalcTimer = 0;
