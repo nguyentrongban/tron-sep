@@ -83,6 +83,7 @@ export function castRayAgainstWalls(
  */
 export function drawOfficeFloor(
   ctx: CanvasRenderingContext2D,
+  walls: WallObstacle[],
   width: number,
   height: number,
   frame: number
@@ -103,104 +104,47 @@ export function drawOfficeFloor(
     }
   }
 
-  // 2. PROCEDURAL HIGH-FIDELITY TACTICAL DEPARTMENT MAP (NO IMAGE BG)
-  const tileSize = 32;
+  // 2. Main inner floor area (elegant corporate dark slate-blue carpet)
+  ctx.fillStyle = '#0f172a';
+  ctx.fillRect(0, 0, width, height);
 
+  // Dynamic floor carpets / details to make map feel rich
+  const tileSize = 32;
   for (let y = 0; y < height; y += tileSize) {
     for (let x = 0; x < width; x += tileSize) {
       const col = Math.floor(x / tileSize);
       const row = Math.floor(y / tileSize);
 
-      // Outer boundary wall backgrounds
-      if (col === 0 || row === 0 || col === Math.floor(width / tileSize) - 1 || row === Math.floor(height / tileSize) - 1) {
-        ctx.fillStyle = '#020108';
-        ctx.fillRect(x, y, tileSize, tileSize);
-        continue;
-      }
-
-      // Determine department floor color programmatically
-      let floorColor = '#0F172A'; // Default slate gray
-      let detailColor: string | null = null;
-
-      if (col < 12 && row < 9) {
-        // IT & Server Room (Top-Left)
-        floorColor = '#1e1b4b'; // Deep Indigo
-        if ((col + row) % 2 === 0) detailColor = '#17153f';
-      } else if (col < 12 && row >= 9 && row < 21) {
-        // QA & Testing Cubicles (Mid-Left)
-        floorColor = '#0f172a'; // Slate dark grey
-        if ((col + row) % 2 === 0) detailColor = '#131c36';
-      } else if (col < 12 && row >= 21) {
-        // Reception & Lobby (Bottom-Left)
-        floorColor = '#1e293b'; // High-class marble-vibe blue
-        if ((col + row) % 2 === 0) detailColor = '#1e243b';
-      } else if (col >= 12 && col < 26) {
-        // Developer & Engineering (Center-Left)
-        floorColor = '#111827'; // Dark Hacker Slate
-        if ((col + row) % 2 === 0) detailColor = '#0c0f1d';
-        // Subtle matrix code green pixel indicators
-        if ((col * row + col) % 23 === 0) detailColor = '#065f46';
-      } else if (col >= 26 && col < 37) {
-        // HR & Marketing (Center-Right)
-        floorColor = '#2e1065'; // Warm Royal Purple
-        if ((col + row) % 2 === 0) detailColor = '#1e0c45';
-      } else if (col >= 37 && col < 44) {
-        // Executive VIP Room (Top-Right)
-        floorColor = '#4a044e'; // Luxurious Wine Maroon
-        if ((col + row) % 2 === 0) detailColor = '#300233';
-      } else {
-        // Exit corridor & Cổng an ninh
-        floorColor = '#1c1917'; // Hazard security grey
-        if ((col + row) % 2 === 0) detailColor = '#0f0e0d';
-      }
-
-      // Draw Base Floor tile
-      ctx.fillStyle = floorColor;
-      ctx.fillRect(x, y, tileSize, tileSize);
-
-      if (detailColor) {
-        ctx.fillStyle = detailColor;
+      // Subtle alternate tile shadings
+      if ((col + row) % 2 === 0) {
+        ctx.fillStyle = '#111e36'; // Slightly lighter cool blue
         ctx.fillRect(x + 2, y + 2, tileSize - 4, tileSize - 4);
-      }
-
-      // 3. WALKWAYS & CARPET RUNNERS (The open corridors where bosses patrol)
-      // Main Horizontal Highway (rows 14..16)
-      const isHorizontalHighway = (row >= 14 && row <= 16);
-      // Vertical hallways around columns 11..12, 25..26, 36..37
-      const isVerticalHighway = (col >= 11 && col <= 13) || (col >= 25 && col <= 27) || (col >= 37 && col <= 38);
-
-      if (isHorizontalHighway || isVerticalHighway) {
-        // Royal Indigo Blue runner carpet with decorative borders
-        ctx.fillStyle = '#312e81'; 
-        ctx.fillRect(x, y, tileSize, tileSize);
-
-        // Pattern on carpet runner
-        if ((col + row) % 2 === 0) {
-          ctx.fillStyle = '#3730a3';
-          ctx.fillRect(x + 4, y + 4, tileSize - 8, tileSize - 8);
-        }
-
-        // Golden stitch border on the edges of the carpet highways
-        ctx.fillStyle = '#eab308';
-        if (isHorizontalHighway && (row === 14 || row === 16)) {
-          ctx.fillRect(x, row === 14 ? y : y + tileSize - 3, tileSize, 2);
-        }
-        if (isVerticalHighway && (col === 11 || col === 13 || col === 25 || col === 27 || col === 37)) {
-          ctx.fillRect(col === 11 || col === 25 || col === 37 ? x : x + tileSize - 3, y, 2, tileSize);
-        }
       }
     }
   }
 
+  // 3. DYNAMICALLY DRAW UNDER-OBSTACLE CARPET PLATES
+  // This procedurally draws stylish contrasting carpet/tile bases directly under walls/cubicles/servers to make them fit perfectly!
+  for (const wall of walls) {
+    // Shaded floor shadow plate under obstacle, slightly larger (+8px) for depth
+    ctx.fillStyle = '#090d16';
+    ctx.fillRect(wall.x - 4, wall.y - 4, wall.width + 8, wall.height + 8);
+
+    // Decorative inner tile plate border
+    ctx.strokeStyle = '#1e1b4b';
+    ctx.lineWidth = 2;
+    ctx.strokeRect(wall.x - 4, wall.y - 4, wall.width + 8, wall.height + 8);
+  }
+
   // Draw thin elegant checker grid lines over the entire board for retro pixel style
-  ctx.strokeStyle = 'rgba(24, 20, 50, 0.25)';
+  ctx.strokeStyle = 'rgba(30, 41, 59, 0.35)';
   ctx.lineWidth = 1;
   ctx.beginPath();
-  for (let x = 0; x < width; x += tileSize) {
+  for (let x = 0; x <= width; x += tileSize) {
     ctx.moveTo(x, 0);
     ctx.lineTo(x, height);
   }
-  for (let y = 0; y < height; y += tileSize) {
+  for (let y = 0; y <= height; y += tileSize) {
     ctx.moveTo(0, y);
     ctx.lineTo(width, y);
   }

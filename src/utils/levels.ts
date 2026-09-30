@@ -90,7 +90,7 @@ export const STORY_LEVELS: FloorLevel[] = [
     deptName: 'Khu Văn Phòng Tổng Hợp VIP (1600x896 Pixel)',
     mapWidth: 1600,
     mapHeight: 896,
-    playerStart: { x: 100, y: 780 },
+    playerStart: { x: 380, y: 760 },
     exitPoint: { x: 1450, y: 60, width: 90, height: 70, requiredItemType: 'card' },
     timeLimit: 90,
     dialogueIntro: [
@@ -112,7 +112,7 @@ export const STORY_LEVELS: FloorLevel[] = [
       // 2. IT & SERVER ROOM (Top-Left)
       { x: 80, y: 60, width: 260, height: 80, type: 'server', label: 'Tủ Server IT' },
       { x: 80, y: 180, width: 140, height: 60, type: 'water_cooler', label: 'Bình Nước IT' },
-      { x: 380, y: 60, width: 24, height: 280, type: 'wall' },      // IT Partition wall
+      { x: 410, y: 60, width: 24, height: 280, type: 'wall' },      // IT Partition wall
 
       // 3. QA & TESTING CUBICLES (Mid-Left & Center-Left)
       { x: 80, y: 280, width: 260, height: 90, type: 'cubicle', label: 'Bàn QA 1' },
@@ -166,7 +166,7 @@ export const STORY_LEVELS: FloorLevel[] = [
         id: 'boss_it_tuan',
         name: 'Sếp IT Tuấn Bug',
         role: 'Quản Lý Mạng IT Văn Phòng',
-        x: 370,
+        x: 380,
         y: 120,
         width: 44,
         height: 44,
@@ -174,8 +174,8 @@ export const STORY_LEVELS: FloorLevel[] = [
         facingAngle: 0,
         state: 'patrol',
         patrolPoints: [
-          { x: 370, y: 120 },
-          { x: 370, y: 780 },
+          { x: 380, y: 120 },
+          { x: 380, y: 780 },
           { x: 790, y: 780 },
           { x: 790, y: 120 },
           { x: 1150, y: 120 },

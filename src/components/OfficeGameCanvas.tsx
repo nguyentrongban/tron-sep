@@ -586,6 +586,32 @@ export const OfficeGameCanvas: React.FC<OfficeGameCanvasProps> = ({
         }
         if (!collideY) s.player.y = Math.max(30, Math.min(s.level.mapHeight - 30 - s.player.height, newY));
 
+        // Unjamming safety routine to prevent player from ever getting stuck inside wall/furniture bounding boxes
+        for (const wall of s.level.walls) {
+          if (
+            s.player.x < wall.x + wall.width &&
+            s.player.x + s.player.width > wall.x &&
+            s.player.y < wall.y + wall.height &&
+            s.player.y + s.player.height > wall.y
+          ) {
+            const overlapLeft = (s.player.x + s.player.width) - wall.x;
+            const overlapRight = (wall.x + wall.width) - s.player.x;
+            const overlapTop = (s.player.y + s.player.height) - wall.y;
+            const overlapBottom = (wall.y + wall.height) - s.player.y;
+
+            const minOverlap = Math.min(overlapLeft, overlapRight, overlapTop, overlapBottom);
+            if (minOverlap === overlapLeft) {
+              s.player.x -= (overlapLeft + 1);
+            } else if (minOverlap === overlapRight) {
+              s.player.x += (overlapRight + 1);
+            } else if (minOverlap === overlapTop) {
+              s.player.y -= (overlapTop + 1);
+            } else {
+              s.player.y += (overlapBottom + 1);
+            }
+          }
+        }
+
         // --- CHECK COLLECTIBLES (MAGNETIC PULL & GENEROUS 46px RADIUS) ---
         for (const item of s.level.collectibles) {
           if (item.isCollected) continue;
@@ -833,6 +859,32 @@ export const OfficeGameCanvas: React.FC<OfficeGameCanvasProps> = ({
             }
           }
           if (!collideY) boss.y = Math.max(30, Math.min(s.level.mapHeight - 30 - boss.height, nextY));
+
+          // Unjamming safety for boss to ensure sếp never gets stuck on furniture bounding boxes
+          for (const wall of s.level.walls) {
+            if (
+              boss.x < wall.x + wall.width &&
+              boss.x + boss.width > wall.x &&
+              boss.y < wall.y + wall.height &&
+              boss.y + boss.height > wall.y
+            ) {
+              const overlapLeft = (boss.x + boss.width) - wall.x;
+              const overlapRight = (wall.x + wall.width) - boss.x;
+              const overlapTop = (boss.y + boss.height) - wall.y;
+              const overlapBottom = (wall.y + wall.height) - boss.y;
+
+              const minOverlap = Math.min(overlapLeft, overlapRight, overlapTop, overlapBottom);
+              if (minOverlap === overlapLeft) {
+                boss.x -= (overlapLeft + 1);
+              } else if (minOverlap === overlapRight) {
+                boss.x += (overlapRight + 1);
+              } else if (minOverlap === overlapTop) {
+                boss.y -= (overlapTop + 1);
+              } else {
+                boss.y += (overlapBottom + 1);
+              }
+            }
+          }
         };
 
         // Boss movement based on state
@@ -987,7 +1039,7 @@ export const OfficeGameCanvas: React.FC<OfficeGameCanvasProps> = ({
       ctx.translate(-cameraX, -cameraY);
 
       // 1. Floor & tiles
-      drawOfficeFloor(ctx, s.level.mapWidth, s.level.mapHeight, s.frame);
+      drawOfficeFloor(ctx, s.level.walls, s.level.mapWidth, s.level.mapHeight, s.frame);
 
       // 2. Exit door
       const reqItems = s.level.collectibles.filter((c) => c.requiredForExit);

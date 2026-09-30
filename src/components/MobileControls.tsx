@@ -130,7 +130,7 @@ export const MobileControls: React.FC<MobileControlsProps> = ({
   };
 
   return (
-    <div className="xl:hidden pointer-events-none fixed inset-0 z-30 select-none touch-none overflow-hidden">
+    <div className="pointer-events-none fixed inset-0 z-30 select-none touch-none overflow-hidden">
       {/* 1. Left Half: Dynamic Floating Joystick Touch Zone */}
       <div
         onPointerDown={handleTouchZonePointerDown}
