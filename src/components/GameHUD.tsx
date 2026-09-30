@@ -95,8 +95,15 @@ export const GameHUD: React.FC<GameHUDProps> = ({
       {/* 1. TOP HEADER BAR */}
       <div className="flex flex-col gap-1.5 w-full">
         <div className="flex items-center justify-between gap-1.5 w-full">
-          {/* Left: Floor Badge & Escape Timer */}
+          {/* Left: Hearts, Floor Badge & Escape Timer */}
           <div className="flex items-center gap-1.5">
+            {/* Player Hearts */}
+            <div className="pixel-box pointer-events-auto bg-slate-900/90 backdrop-blur border border-red-500/40 px-2 py-1 rounded-lg flex items-center gap-1 text-red-500 text-xs shadow-md">
+              <span>❤️</span>
+              <span>❤️</span>
+              <span>❤️</span>
+            </div>
+
             {/* Floor Name */}
             <div className="pixel-box pointer-events-auto bg-slate-900/90 backdrop-blur border border-slate-700 px-2.5 py-1 rounded-lg flex items-center gap-1.5 shadow-md">
               <span className="text-amber-400 font-pixel text-[10px] sm:text-xs tracking-wider">

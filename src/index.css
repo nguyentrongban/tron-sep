@@ -23,6 +23,9 @@ html, body {
   .font-tech {
     font-family: 'Chakra Petch', system-ui, sans-serif;
   }
+  .font-hand {
+    font-family: 'Caveat', 'Patrick Hand', cursive, sans-serif;
+  }
   .pixel-art {
     image-rendering: pixelated;
     image-rendering: crisp-edges;

@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { ShoppingBag, Zap, Shield, Eye, Target, Sparkles, Check, Lock, Trophy, Award, Gift } from 'lucide-react';
 import { PlayerUpgrades, CharacterSkin, Accessory, DailyMission, AchievementItem } from '../types/game';
 import { UPGRADE_CONFIG } from '../utils/progression';
+import { LottieStickerIcon } from './LottieStickerIcon';
 
 interface ShopModalProps {
   coins: number;
@@ -57,7 +58,7 @@ export const ShopModal: React.FC<ShopModalProps> = ({
 
           {/* Current balance */}
           <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-500/20 border border-amber-500/40 text-amber-300 font-pixel text-xs">
-            <span>💰</span>
+            <LottieStickerIcon name="coin" size={20} />
             <span>{coins} Xu</span>
           </div>
         </div>
