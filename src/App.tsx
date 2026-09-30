@@ -297,10 +297,18 @@ export default function App() {
       const clearedFloorNum = currentFloorIndex + 1;
       const nextMaxUnlocked = Math.max(prev.maxLevelUnlocked || 1, Math.min(8, clearedFloorNum + 1));
 
+      // Personal Salary VND tracking (+1,500,000 VND for successful escape)
+      const currentSalary = prev.monthlySalaryVND !== undefined ? prev.monthlySalaryVND : 15000000;
+      const currentCumulative = prev.cumulativeSalaryEarned !== undefined ? prev.cumulativeSalaryEarned : 15000000;
+      const nextSalary = currentSalary + 1500000;
+      const nextCumulative = currentCumulative + 1500000;
+
       return {
         ...prev,
         coins: nextCoins,
         totalEscapes: nextEscapes,
+        monthlySalaryVND: nextSalary,
+        cumulativeSalaryEarned: nextCumulative,
         maxLevelUnlocked: nextMaxUnlocked,
         hasCompletedTutorial: gameMode === 'tutorial' ? true : prev.hasCompletedTutorial,
         hasBeatenGame: hasWonCampaign,
@@ -328,8 +336,21 @@ export default function App() {
   // Caught by boss triggered by canvas
   const handlePlayerCaught = useCallback(() => {
     setStatus('caught');
+    
+    // Deduct salary (-1,000,000 VND on getting caught), don't drop below 5,000,000 VND minimum wage
+    updateSaveData((prev) => {
+      const currentSalary = prev.monthlySalaryVND !== undefined ? prev.monthlySalaryVND : 15000000;
+      const nextSalary = Math.max(5000000, currentSalary - 1000000);
+      const nextCaught = (prev.totalCaughtTimes || 0) + 1;
+      return {
+        ...prev,
+        monthlySalaryVND: nextSalary,
+        totalCaughtTimes: nextCaught
+      };
+    });
+
     soundManager.stopBGM();
-  }, []);
+  }, [updateSaveData]);
 
   // Next floor after victory
   const handleNextFloor = () => {
@@ -421,6 +442,10 @@ export default function App() {
           hasBeatenGame={saveData.unlockedSkins.includes('ceo_gold') || saveData.totalEscapes >= 8}
           unclaimedMissionsCount={unclaimedCount}
           maxLevelUnlocked={saveData.maxLevelUnlocked || 1}
+          monthlySalaryVND={saveData.monthlySalaryVND !== undefined ? saveData.monthlySalaryVND : 15000000}
+          cumulativeSalaryEarned={saveData.cumulativeSalaryEarned !== undefined ? saveData.cumulativeSalaryEarned : 15000000}
+          totalCaughtTimes={saveData.totalCaughtTimes !== undefined ? saveData.totalCaughtTimes : 0}
+          totalEscapes={saveData.totalEscapes !== undefined ? saveData.totalEscapes : 0}
         />
       )}
 

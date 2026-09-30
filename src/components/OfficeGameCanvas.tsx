@@ -797,11 +797,47 @@ export const OfficeGameCanvas: React.FC<OfficeGameCanvasProps> = ({
           if (boss.alertLevel >= 75) {
             if (boss.state !== 'chase') {
               soundManager.playAlert();
-              boss.yellText = ['OT ĐÊ!', 'AI CHO VỀ?!', 'SLIDE CHƯA XONG!', 'HỌP ĐỘT XUẤT!'][
-                Math.floor(Math.random() * 4)
+              const funnyYells = [
+                'OT KHÔNG LƯƠNG EM ƠI!',
+                'DEADLINE ĐÂU RỒI?!',
+                'AI CHO PHÉP TAN CA?!',
+                'HỌP KHẨN ĐỘT XUẤT!',
+                'SLIDE CHƯA XONG MÀ VỀ À?!',
+                'DỰ ÁN ĐANG CHÁY EM ƠI!',
+                'BÙNG DEADLINE À?!'
               ];
-              boss.yellTimer = 90;
-              s.screenShake = 8;
+              boss.yellText = funnyYells[Math.floor(Math.random() * funnyYells.length)];
+              boss.yellTimer = 110;
+              s.screenShake = 16; // Massive dramatic shake!
+
+              // Spawn stress particles over player
+              for (let i = 0; i < 5; i++) {
+                s.particles.push({
+                  x: pCenter.x + (Math.random() - 0.5) * 20,
+                  y: pCenter.y - 15,
+                  vx: (Math.random() - 0.5) * 3,
+                  vy: -3 - Math.random() * 2,
+                  color: '#f43f5e',
+                  size: 4,
+                  alpha: 1,
+                  life: 35,
+                  maxLife: 35,
+                  text: '😱'
+                });
+              }
+              // Spawn angry red text particles flying from Sếp
+              s.particles.push({
+                x: boss.x + boss.width / 2,
+                y: boss.y - 10,
+                vx: (Math.random() - 0.5) * 2,
+                vy: -2,
+                color: '#ef4444',
+                size: 5,
+                alpha: 1,
+                life: 45,
+                maxLife: 45,
+                text: '🔥 TRỪ LƯƠNG!'
+              });
             }
             boss.state = 'chase';
             boss.investigateTarget = { x: pCenter.x, y: pCenter.y };
@@ -823,7 +859,24 @@ export const OfficeGameCanvas: React.FC<OfficeGameCanvasProps> = ({
           }
         }
 
-        if (boss.state === 'chase') anyBossChasing = true;
+        if (boss.state === 'chase') {
+          anyBossChasing = true;
+          // Continuous stress sweat droplets flying off the player!
+          if (s.frame % 14 === 0) {
+            s.particles.push({
+              x: pCenter.x + (Math.random() - 0.5) * 16,
+              y: pCenter.y - 10,
+              vx: (Math.random() - 0.5) * 1.5,
+              vy: -2 + Math.random(),
+              color: '#38bdf8',
+              size: 4,
+              alpha: 1,
+              life: 25,
+              maxLife: 25,
+              text: '💦'
+            });
+          }
+        }
         if (boss.alertLevel > highestAlert) highestAlert = boss.alertLevel;
 
         // Helper function for moving boss with wall collisions
@@ -964,14 +1017,15 @@ export const OfficeGameCanvas: React.FC<OfficeGameCanvasProps> = ({
           let distToWaypoint = Math.hypot(firstWaypoint.x - bCenter.x, firstWaypoint.y - bCenter.y);
 
           // If sếp is close to the current waypoint, shift to the next one
-          while (distToWaypoint < 20 && boss.path.length > 1) {
+          // Hug corners tightly at 14px threshold to prevent getting stuck or twitching
+          while (distToWaypoint < 14 && boss.path.length > 1) {
             boss.path.shift();
             firstWaypoint = boss.path[0];
             distToWaypoint = Math.hypot(firstWaypoint.x - bCenter.x, firstWaypoint.y - bCenter.y);
           }
 
           // If we reached the final node, complete the path
-          if (boss.path.length === 1 && distToWaypoint < 12) {
+          if (boss.path.length === 1 && distToWaypoint < 10) {
             boss.path.shift();
           }
 
@@ -989,12 +1043,21 @@ export const OfficeGameCanvas: React.FC<OfficeGameCanvasProps> = ({
         const dy = moveTarget ? moveTarget.y - bCenter.y : 0;
         const dist = Math.hypot(dx, dy);
 
-        // Apply movement using our computed moveTarget
+        // Interpolate facing angle smoothly instead of snapping, creating natural curved pathing!
+        if (moveTarget && dist > 2) {
+          const targetAngle = Math.atan2(dy, dx);
+          let angleDiff = targetAngle - boss.facingAngle;
+          while (angleDiff < -Math.PI) angleDiff += Math.PI * 2;
+          while (angleDiff > Math.PI) angleDiff -= Math.PI * 2;
+          boss.facingAngle += angleDiff * 0.15; // Butter smooth angular lerp rate
+        }
+
+        // Apply movement using our computed, smoothly-interpolated facing angle
         if (boss.state === 'chase' && boss.investigateTarget) {
-          if (dist > 10) {
-            boss.facingAngle = Math.atan2(dy, dx);
+          if (dist > 8) {
             const chaseSpeed = currentBossSpeed * 1.35;
-            moveBossWithCollision((dx / dist) * chaseSpeed, (dy / dist) * chaseSpeed);
+            // Drive forward in the direction Sếp is smoothly looking!
+            moveBossWithCollision(Math.cos(boss.facingAngle) * chaseSpeed, Math.sin(boss.facingAngle) * chaseSpeed);
           }
 
           // Caught check: triggers if boss touches the player (radius 36px)
@@ -1005,11 +1068,10 @@ export const OfficeGameCanvas: React.FC<OfficeGameCanvasProps> = ({
             onPlayerCaught();
           }
         } else if (boss.state === 'investigate' && boss.investigateTarget) {
-          if (dist > 15) {
-            boss.facingAngle = Math.atan2(dy, dx);
-            moveBossWithCollision((dx / dist) * currentBossSpeed, (dy / dist) * currentBossSpeed);
+          if (dist > 10) {
+            moveBossWithCollision(Math.cos(boss.facingAngle) * currentBossSpeed, Math.sin(boss.facingAngle) * currentBossSpeed);
           } else {
-            // Reached last known location, look around before resuming patrol
+            // Reached last known location, look around smoothly before resuming patrol
             boss.investigateTimer--;
             boss.facingAngle += Math.sin(s.frame * 0.08) * 0.04;
             if (boss.investigateTimer <= 0) {
@@ -1025,9 +1087,8 @@ export const OfficeGameCanvas: React.FC<OfficeGameCanvasProps> = ({
               boss.patrolWaitTimer--;
               boss.facingAngle += Math.sin(s.frame * 0.12) * 0.05;
             } else {
-              if (dist > 18) {
-                boss.facingAngle = Math.atan2(dy, dx);
-                moveBossWithCollision((dx / dist) * currentBossSpeed, (dy / dist) * currentBossSpeed);
+              if (dist > 12) {
+                moveBossWithCollision(Math.cos(boss.facingAngle) * currentBossSpeed, Math.sin(boss.facingAngle) * currentBossSpeed);
               } else {
                 // Arrived at patrol waypoint! Pause briefly and scan
                 boss.patrolWaitTimer = 20 + Math.floor(Math.random() * 25);

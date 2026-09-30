@@ -32,6 +32,10 @@ interface MainMenuProps {
   hasBeatenGame?: boolean;
   unclaimedMissionsCount?: number;
   maxLevelUnlocked?: number;
+  monthlySalaryVND: number;
+  cumulativeSalaryEarned: number;
+  totalCaughtTimes: number;
+  totalEscapes: number;
 }
 
 export const MainMenu: React.FC<MainMenuProps> = ({
@@ -49,7 +53,11 @@ export const MainMenu: React.FC<MainMenuProps> = ({
   onToggleMute,
   coins,
   unclaimedMissionsCount = 0,
-  maxLevelUnlocked = 1
+  maxLevelUnlocked = 1,
+  monthlySalaryVND,
+  cumulativeSalaryEarned,
+  totalCaughtTimes,
+  totalEscapes
 }) => {
   const [selectedFloor, setSelectedFloor] = useState<number>(Math.min(maxLevelUnlocked, 8));
   const [isNightmareTab, setIsNightmareTab] = useState<boolean>(false);
@@ -210,6 +218,50 @@ export const MainMenu: React.FC<MainMenuProps> = ({
                   ? '🌙 Văn phòng tắt đèn tối đen! Bạn có đèn pin, Sếp chạy nhanh 1.3x và kỹ năng Quét Radar kích hoạt liên tục!'
                   : floorList[selectedFloor - 1]?.desc}
               </p>
+            </div>
+
+            {/* GORGEOUS PERSONAL SALARY & OT PENALTY DASHBOARD */}
+            <div className="p-1.5 sm:p-2 rounded-xl bg-slate-950/80 border border-emerald-500/30 text-left shrink-0 shadow-lg relative overflow-hidden">
+              <div className="absolute top-0 right-0 w-12 h-12 bg-emerald-500/10 rounded-full blur-xl pointer-events-none" />
+              
+              <div className="flex items-center justify-between border-b border-emerald-500/15 pb-1 mb-1.5 shrink-0">
+                <span className="font-pixel text-[9px] sm:text-[10px] text-emerald-400 font-bold flex items-center gap-1">
+                  📊 THÀNH TÍCH & BẢNG LƯƠNG THÁNG NÀY
+                </span>
+                <span className="text-[8px] bg-red-500/20 text-red-400 border border-red-500/30 px-1 py-0.5 rounded font-pixel">
+                  PHẠT BỊ BẮT: -1.000.000đ
+                </span>
+              </div>
+              
+              <div className="grid grid-cols-2 gap-x-2 gap-y-1 text-slate-300 text-[10px] sm:text-xs">
+                <div className="flex flex-col">
+                  <span className="text-[8px] text-slate-400 font-pixel uppercase">Thực lĩnh tháng này:</span>
+                  <span className={`font-pixel font-bold text-[11px] sm:text-xs ${monthlySalaryVND >= 10000000 ? 'text-emerald-400 animate-pulse' : 'text-red-400'}`}>
+                    {monthlySalaryVND.toLocaleString('vi-VN')}đ
+                  </span>
+                </div>
+                
+                <div className="flex flex-col">
+                  <span className="text-[8px] text-slate-400 font-pixel uppercase">Tổng thu sự nghiệp:</span>
+                  <span className="font-pixel font-bold text-[11px] sm:text-xs text-amber-300">
+                    {cumulativeSalaryEarned.toLocaleString('vi-VN')}đ
+                  </span>
+                </div>
+                
+                <div className="flex flex-col">
+                  <span className="text-[8px] text-slate-400 font-pixel uppercase">Trốn thoát thành công:</span>
+                  <span className="font-pixel font-bold text-[10px] text-emerald-300">
+                    {totalEscapes} lần (+1.5Mđ / lần)
+                  </span>
+                </div>
+                
+                <div className="flex flex-col">
+                  <span className="text-[8px] text-slate-400 font-pixel uppercase">Số lần bị sếp tóm:</span>
+                  <span className="font-pixel font-bold text-[10px] text-red-400">
+                    {totalCaughtTimes} lần (Phạt trừ lương)
+                  </span>
+                </div>
+              </div>
             </div>
 
             {/* BIG PLAY BUTTON */}

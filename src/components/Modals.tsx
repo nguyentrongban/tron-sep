@@ -62,6 +62,17 @@ export const IntroModal: React.FC<IntroModalProps> = ({ level, onStart }) => {
   );
 };
 
+const INFRACTIONS = [
+  "Ném vỡ tách trà gốm sứ Bát Tràng của Sếp để tạo tiếng động đánh lạc hướng.",
+  "Chạy thục mạng hành lang IT tốc độ bàn thờ làm sập tủ điện chính của phòng máy chủ.",
+  "Trốn vào sọt rác/thùng carton để lướt TikTok bị Sếp đi qua nhìn thấy chân lòi ra ngoài.",
+  "Định lẻn về lúc 17:31 khi chưa gửi báo cáo ngày làm sếp kích hoạt chế độ tầm nhiệt quét.",
+  "Uống trộm ly trà sữa boba Full Topping của đồng nghiệp phòng Nhân Sự trong tủ lạnh công ty.",
+  "Xếp giấy báo cáo doanh thu quý thành máy bay phóng thẳng vào trán HR Snitch.",
+  "Gửi nhầm sticker meme bôi nhọ sếp vào group chat Viber tổng của toàn công ty.",
+  "Ngủ gật há mồm ngay tại bàn làm việc ngáy khò khò phát ra tiếng động lôi kéo sếp đến."
+];
+
 interface CaughtModalProps {
   level: FloorLevel;
   onRetry: () => void;
@@ -69,6 +80,16 @@ interface CaughtModalProps {
 }
 
 export const CaughtModal: React.FC<CaughtModalProps> = ({ level, onRetry, onGoToMenu }) => {
+  const [infraction] = React.useState(() => {
+    // Generate a funny random infraction on mount
+    const idx = Math.floor(Math.random() * INFRACTIONS.length);
+    return INFRACTIONS[idx];
+  });
+
+  const empId = React.useMemo(() => {
+    return `NV-${1000 + Math.floor(Math.random() * 9000)}`;
+  }, []);
+
   return (
     <div className="fixed inset-0 z-50 bg-red-950/80 backdrop-blur-md flex items-center justify-center p-1.5 sm:p-3 select-none">
       <div className="pixel-box bg-slate-900 border-2 border-red-500 max-w-md w-full p-2.5 sm:p-4 rounded-2xl shadow-2xl max-h-[96dvh] flex flex-col justify-between overflow-y-auto my-auto animate-in zoom-in-95 duration-200">
@@ -85,9 +106,26 @@ export const CaughtModal: React.FC<CaughtModalProps> = ({ level, onRetry, onGoTo
           </p>
         </div>
 
+        {/* Hilarious Official Disciplinary Report */}
+        <div className="my-2 p-3 bg-red-950/30 border border-red-500/20 rounded-xl space-y-2 text-left text-xs font-chibi shrink-0">
+          <div className="text-center font-pixel text-[9px] sm:text-[10px] text-red-400 font-bold border-b border-red-500/10 pb-1.5 flex items-center justify-center gap-1.5">
+            <span>📋</span> BIÊN BẢN KỶ LUẬT LAO ĐỘNG SỐ #{Math.floor(Math.random() * 900 + 100)}
+          </div>
+          <div className="grid grid-cols-3 gap-y-2 text-slate-300 py-1">
+            <span className="text-slate-400 font-medium text-[10px] font-pixel">NHÂN VIÊN:</span>
+            <span className="col-span-2 font-mono text-[11px] text-red-300 font-bold">{empId} (Bộ Phận Lẻn Về)</span>
+            
+            <span className="text-slate-400 font-medium text-[10px] font-pixel">LỖI VI PHẠM:</span>
+            <span className="col-span-2 text-red-200 font-semibold leading-relaxed text-[11px] sm:text-xs">{infraction}</span>
+            
+            <span className="text-slate-400 font-medium text-[10px] font-pixel">HÌNH PHẠT:</span>
+            <span className="col-span-2 text-amber-400 font-bold text-[11px] sm:text-xs">Tăng ca (OT) 72 tiếng không lương + Chép phạt KPI!</span>
+          </div>
+        </div>
+
         {/* Chibi Caught Scene & Dialogue */}
-        <div className="my-1.5 p-2 sm:p-2.5 bg-slate-950 rounded-xl border border-red-900/50 flex flex-col gap-1 shrink-0">
-          <div className="flex items-center gap-1 text-red-400 font-pixel text-[10px]">
+        <div className="mb-2 p-2 bg-slate-950 rounded-xl border border-red-900/40 flex flex-col gap-1 shrink-0">
+          <div className="flex items-center gap-1 text-red-400 font-pixel text-[9px]">
             <span>🤬</span>
             <span>SẾP LA LỚN:</span>
           </div>

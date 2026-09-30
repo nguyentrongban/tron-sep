@@ -15,6 +15,9 @@ export interface GameSaveData {
   achievements: AchievementItem[];
   highScoreEndless: number;
   totalEscapes: number;
+  totalCaughtTimes?: number;     // Number of times caught
+  monthlySalaryVND?: number;      // Current salary this month (starts at 15,000,000 VND)
+  cumulativeSalaryEarned?: number; // Total cumulative career earnings in VND
 }
 
 export const INITIAL_UPGRADES: PlayerUpgrades = {
@@ -179,6 +182,9 @@ export function loadGameSaveData(): GameSaveData {
       if (!data.maxLevelUnlocked) {
         data.maxLevelUnlocked = 1;
       }
+      if (data.totalCaughtTimes === undefined) data.totalCaughtTimes = 0;
+      if (data.monthlySalaryVND === undefined) data.monthlySalaryVND = 15000000;
+      if (data.cumulativeSalaryEarned === undefined) data.cumulativeSalaryEarned = 15000000;
       return data;
     }
   } catch (e) {
@@ -197,7 +203,10 @@ export function loadGameSaveData(): GameSaveData {
     dailyMissions: generateDailyMissions(),
     achievements: [...DEFAULT_ACHIEVEMENTS],
     highScoreEndless: 0,
-    totalEscapes: 0
+    totalEscapes: 0,
+    totalCaughtTimes: 0,
+    monthlySalaryVND: 15000000,
+    cumulativeSalaryEarned: 15000000
   };
 }
 
