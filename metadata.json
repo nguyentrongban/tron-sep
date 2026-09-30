@@ -1,0 +1,6 @@
+{
+  "name": "Trốn Sếp Tan Ca - Pixel Chibi Stealth",
+  "description": "Game lén lút pixel chibi hài hước: Hết giờ làm rồi, né tầm nhìn của sếp, tận dụng chỗ ẩn nấp và trốn về trước khi bị bắt làm OT!",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
